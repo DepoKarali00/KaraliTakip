@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Kargo Takip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EAE6DC;
+    --paper-2:#F4F1E9;
+    --card:#FFFDF8;
+    --ink:#28241E;
+    --ink-soft:#6B6459;
+    --line:#D8D2C2;
+    --stamp-red:#A8402C;
+    --stamp-red-dim:#EADAD3;
+    --stamp-green:#2E6B52;
+    --stamp-green-dim:#DCE8E0;
+    --stamp-blue:#2E5A6B;
+    --stamp-blue-dim:#DCE5E8;
+    --gold:#A9832E;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+  .wrap{
+    max-width:480px;
+    margin:0 auto;
+    padding:20px 16px 100px;
+  }
+  header{
+    padding:8px 4px 18px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+  }
+  header h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:26px;
+    margin:0 0 2px;
+    letter-spacing:-0.02em;
+  }
+  header p{
+    margin:0;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .logout-btn{
+    flex-shrink:0;
+    border:1px solid var(--line);
+    background:var(--paper-2);
+    color:var(--ink-soft);
+    font-size:12px;
+    font-weight:500;
+    padding:8px 12px;
+    border-radius:100px;
+    cursor:pointer;
+    margin-top:4px;
+  }
+  .summary{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .sum-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:12px 10px;
+    text-align:center;
+  }
+  .sum-card .num{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:600;
+    font-size:19px;
+    display:block;
+  }
+  .sum-card .lbl{
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:2px;
+    display:block;
+  }
+  .tabs{
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:9px 2px;
+    border-radius:100px;
+    font-size:11.5px;
+    font-weight:500;
+    border:1px solid var(--line);
+    background:var(--paper-2);
+    color:var(--ink-soft);
+    cursor:pointer;
+    user-select:none;
+    transition:all .15s ease;
+  }
+  .tab.active{
+    background:var(--ink);
+    color:var(--paper-2);
+    border-color:var(--ink);
+  }
+  .list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .card{
+    position:relative;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-left:4px solid var(--stamp-red);
+    border-radius:var(--radius);
+    padding:13px 14px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+    overflow:hidden;
+    transition:border-color .2s ease;
+  }
+  .card.shipped{ border-left-color:var(--stamp-green); }
+  .card.completed{ border-left-color:var(--stamp-blue); opacity:.72; }
+  .card-body{ flex:1; min-width:0; padding-right:22px; }
+  .card-name{
+    font-weight:600;
+    font-size:15px;
+    margin:0 0 3px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .card-meta{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  .card-meta .price{ color:var(--gold); font-weight:600; }
+  .card-note{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:3px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .stamps-col{ flex-shrink:0; display:flex; gap:7px; }
+  .stamp-btn{
+    flex-shrink:0;
+    width:46px;
+    height:46px;
+    border-radius:50%;
+    border:2px solid var(--stamp-red);
+    background:var(--stamp-red-dim);
+    color:var(--stamp-red);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:9px;
+    text-align:center;
+    line-height:1.1;
+    cursor:pointer;
+    transform:rotate(-8deg);
+    transition:transform .25s cubic-bezier(.34,1.56,.64,1), background .2s ease, color .2s ease, border-color .2s ease, opacity .2s ease;
+  }
+  .stamp-btn.shipped{
+    border-color:var(--stamp-green);
+    background:var(--stamp-green-dim);
+    color:var(--stamp-green);
+    transform:rotate(-8deg) scale(1.06);
+  }
+  .stamp-btn.complete-stamp{
+    border-color:var(--line);
+    background:var(--paper-2);
+    color:var(--ink-soft);
+    opacity:.45;
+  }
+  .stamp-btn.complete-stamp.active{
+    border-color:var(--stamp-blue);
+    background:var(--stamp-blue-dim);
+    color:var(--stamp-blue);
+    opacity:1;
+    transform:rotate(-8deg) scale(1.06);
+  }
+  .stamp-btn.complete-stamp.enabled{ opacity:1; }
+  .stamp-btn:active{ transform:rotate(-8deg) scale(0.9); }
+  .del-btn{
+    position:absolute;
+    top:8px;
+    right:8px;
+    width:24px;
+    height:24px;
+    border-radius:50%;
+    border:none;
+    background:transparent;
+    color:var(--ink-soft);
+    font-size:14px;
+    cursor:pointer;
+    line-height:1;
+    padding:0;
+  }
+  .clear-bar{ display:flex; justify-content:flex-end; margin:-8px 0 12px; }
+  .clear-bar button{
+    border:none;
+    background:transparent;
+    color:var(--stamp-red);
+    font-size:12.5px;
+    font-weight:500;
+    cursor:pointer;
+    padding:4px 2px;
+  }
+  .empty{ text-align:center; padding:50px 20px; color:var(--ink-soft); }
+  .empty p{ margin:0 0 4px; font-size:14px; }
+  .fab{
+    position:fixed;
+    bottom:22px;
+    left:50%;
+    transform:translateX(-50%);
+    width:min(448px, calc(100% - 32px));
+    background:var(--ink);
+    color:var(--paper-2);
+    border:none;
+    border-radius:100px;
+    padding:15px 0;
+    font-size:15px;
+    font-weight:600;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    box-shadow:0 6px 20px rgba(40,36,30,.28);
+  }
+  .modal-bg{
+    position:fixed;
+    inset:0;
+    background:rgba(30,27,22,.45);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:20;
+  }
+  .modal-bg.open{ display:flex; }
+  .modal{
+    background:var(--paper-2);
+    width:100%;
+    max-width:480px;
+    border-radius:20px 20px 0 0;
+    padding:22px 20px 26px;
+  }
+  .modal h2{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:19px;
+    margin:0 0 16px;
+  }
+  .field{ margin-bottom:12px; }
+  .field label{
+    display:block;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+    font-weight:500;
+  }
+  .field input{
+    width:100%;
+    padding:11px 12px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--card);
+    font-size:15px;
+    font-family:'Inter',sans-serif;
+    color:var(--ink);
+  }
+  .field input:focus{ outline:none; border-color:var(--ink-soft); }
+  .modal-actions{ display:flex; gap:10px; margin-top:6px; }
+  .modal-actions button{
+    flex:1;
+    padding:13px 0;
+    border-radius:100px;
+    font-size:14px;
+    font-weight:600;
+    border:1px solid var(--line);
+    cursor:pointer;
+  }
+  .btn-cancel{ background:transparent; color:var(--ink-soft); }
+  .btn-save{ background:var(--ink); color:var(--paper-2); border-color:var(--ink); }
+  .toast{
+    position:fixed;
+    top:16px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:var(--paper-2);
+    padding:10px 18px;
+    border-radius:100px;
+    font-size:13px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease;
+    z-index:30;
+  }
+  .toast.show{ opacity:1; }
+
+  .auth-screen{
+    max-width:380px;
+    margin:0 auto;
+    padding:60px 20px 40px;
+    min-height:100vh;
+  }
+  .auth-screen h1{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    font-size:26px;
+    margin:0 0 6px;
+    text-align:center;
+  }
+  .auth-screen p.sub{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:13px;
+    margin:0 0 28px;
+  }
+  .auth-toggle{
+    display:flex;
+    background:var(--paper-2);
+    border-radius:100px;
+    padding:4px;
+    margin-bottom:22px;
+    border:1px solid var(--line);
+  }
+  .auth-toggle button{
+    flex:1;
+    border:none;
+    background:transparent;
+    padding:10px 0;
+    border-radius:100px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .auth-toggle button.active{
+    background:var(--ink);
+    color:var(--paper-2);
+  }
+  .auth-error{
+    background:var(--stamp-red-dim);
+    color:var(--stamp-red);
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:12.5px;
+    margin-bottom:14px;
+    display:none;
+  }
+  .auth-error.show{ display:block; }
+  .auth-submit{
+    width:100%;
+    padding:14px 0;
+    border-radius:100px;
+    border:none;
+    background:var(--ink);
+    color:var(--paper-2);
+    font-size:15px;
+    font-weight:600;
+    cursor:pointer;
+    margin-top:6px;
+  }
+  .auth-submit:disabled{ opacity:.6; }
+  .loading-screen{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    color:var(--ink-soft);
+    font-size:14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="loading-screen" id="loadingScreen">Yükleniyor…</div>
+
+<div class="auth-screen" id="authScreen" style="display:none;">
+  <h1>Kargo Takip</h1>
+  <p class="sub">Verilerinize her cihazdan ulaşmak için giriş yapın.</p>
+
+  <div class="auth-toggle">
+    <button id="tabLogin" class="active">Giriş yap</button>
+    <button id="tabSignup">Üye ol</button>
+  </div>
+
+  <div class="auth-error" id="authError"></div>
+
+  <div class="field">
+    <label>E-posta</label>
+    <input type="email" id="authEmail" placeholder="ornek@mail.com" autocomplete="email">
+  </div>
+  <div class="field">
+    <label>Şifre</label>
+    <input type="password" id="authPassword" placeholder="En az 6 karakter" autocomplete="current-password">
+  </div>
+
+  <button class="auth-submit" id="authSubmit">Giriş yap</button>
+</div>
+
+<div class="wrap" id="appScreen" style="display:none;">
+  <header>
+    <div>
+      <h1>Kargo Takip</h1>
+      <p>Kargoya verince ve iş bitince damgala.</p>
+    </div>
+    <button class="logout-btn" id="logoutBtn">Çıkış yap</button>
+  </header>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="tabs" id="tabs">
+    <div class="tab active" data-filter="all">Tümü</div>
+    <div class="tab" data-filter="pending">Bekliyor</div>
+    <div class="tab" data-filter="shipped">Kargolandı</div>
+    <div class="tab" data-filter="completed">Tamamlandı</div>
+  </div>
+
+  <div class="clear-bar" id="clearBar" style="display:none;">
+    <button id="clearBtn">Tamamlananları sil</button>
+  </div>
+
+  <div class="list" id="list"></div>
+</div>
+
+<button class="fab" id="addBtn" style="display:none;">+ Ürün ekle</button>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h2>Yeni ürün</h2>
+    <div class="field">
+      <label>Ürün adı</label>
+      <input type="text" id="inpName" placeholder="Örn. Siyah deri cüzdan" maxlength="60">
+    </div>
+    <div class="field">
+      <label>Fiyat (TL)</label>
+      <input type="number" id="inpPrice" placeholder="Örn. 350" inputmode="decimal">
+    </div>
+    <div class="field">
+      <label>Not (opsiyonel)</label>
+      <input type="text" id="inpNote" placeholder="Örn. Alıcı: Ayşe, adres notu vb." maxlength="80">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancelBtn">Vazgeç</button>
+      <button class="btn-save" id="saveBtn">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+/* ============================================================
+   1) FIREBASE AYARLARI
+   Firebase konsolundan aldığınız bilgileri buraya yapıştırın.
+   Rehber: mesajın altındaki kurulum adımlarına bakın.
+============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyCqu_qHvSyMQ6iFkcytrEIT0gUBVCHLqOM",
+  authDomain: "karalitakip.firebaseapp.com",
+  projectId: "karalitakip",
+  storageBucket: "karalitakip.firebasestorage.app",
+  messagingSenderId: "836733462856",
+  appId: "1:836733462856:web:9456a49cdbf1fce89d6b7d",
+  measurementId: "G-743569ZYG5"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let products = [];
+let filter = 'all';
+let currentUser = null;
+let authMode = 'login';
+
+function formatPrice(n){
+  const num = Number(n) || 0;
+  return num.toLocaleString('tr-TR', {maximumFractionDigits:2}) + ' TL';
+}
+function formatDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString('tr-TR', {day:'2-digit', month:'2-digit', year:'2-digit'});
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1500);
+}
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+async function loadProducts(){
+  try{
+    const doc = await db.collection('users').doc(currentUser.uid).get();
+    products = doc.exists && doc.data().products ? doc.data().products : [];
+  }catch(e){
+    products = [];
+    showToast('Veriler yüklenemedi');
+  }
+  render();
+}
+async function saveProducts(){
+  try{
+    await db.collection('users').doc(currentUser.uid).set({products}, {merge:true});
+  }catch(e){
+    showToast('Kaydedilemedi, internet bağlantınızı kontrol edin');
+  }
+}
+
+const authScreen = document.getElementById('authScreen');
+const appScreen = document.getElementById('appScreen');
+const loadingScreen = document.getElementById('loadingScreen');
+const addBtn = document.getElementById('addBtn');
+const authError = document.getElementById('authError');
+
+function setAuthMode(mode){
+  authMode = mode;
+  document.getElementById('tabLogin').classList.toggle('active', mode==='login');
+  document.getElementById('tabSignup').classList.toggle('active', mode==='signup');
+  document.getElementById('authSubmit').textContent = mode==='login' ? 'Giriş yap' : 'Hesap oluştur';
+  authError.classList.remove('show');
+}
+document.getElementById('tabLogin').addEventListener('click', ()=>setAuthMode('login'));
+document.getElementById('tabSignup').addEventListener('click', ()=>setAuthMode('signup'));
+
+function authErrorMessage(code){
+  const map = {
+    'auth/invalid-email':'Geçersiz e-posta adresi.',
+    'auth/user-not-found':'Bu e-posta ile kayıtlı hesap yok, önce üye olun.',
+    'auth/wrong-password':'Şifre hatalı.',
+    'auth/email-already-in-use':'Bu e-posta zaten kayıtlı, giriş yapmayı deneyin.',
+    'auth/weak-password':'Şifre en az 6 karakter olmalı.',
+    'auth/invalid-credential':'E-posta veya şifre hatalı.'
+  };
+  return map[code] || 'Bir şeyler ters gitti, tekrar deneyin.';
+}
+
+document.getElementById('authSubmit').addEventListener('click', async ()=>{
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  authError.classList.remove('show');
+  if(!email || !password){
+    authError.textContent = 'E-posta ve şifre girin.';
+    authError.classList.add('show');
+    return;
+  }
+  const btn = document.getElementById('authSubmit');
+  btn.disabled = true;
+  try{
+    if(authMode === 'login'){
+      await auth.signInWithEmailAndPassword(email, password);
+    }else{
+      await auth.createUserWithEmailAndPassword(email, password);
+    }
+  }catch(e){
+    authError.textContent = authErrorMessage(e.code);
+    authError.classList.add('show');
+  }
+  btn.disabled = false;
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+  await auth.signOut();
+});
+
+auth.onAuthStateChanged(async (user)=>{
+  loadingScreen.style.display = 'none';
+  if(user){
+    currentUser = user;
+    authScreen.style.display = 'none';
+    appScreen.style.display = 'block';
+    addBtn.style.display = 'block';
+    await loadProducts();
+  }else{
+    currentUser = null;
+    authScreen.style.display = 'block';
+    appScreen.style.display = 'none';
+    addBtn.style.display = 'none';
+  }
+});
+
+function render(){
+  const list = document.getElementById('list');
+  const summary = document.getElementById('summary');
+  const clearBar = document.getElementById('clearBar');
+
+  const total = products.length;
+  const completedCount = products.filter(p=>p.completed).length;
+  const pending = products.filter(p=>!p.shipped).length;
+  const totalValue = products.reduce((s,p)=>s+(Number(p.price)||0),0);
+
+  summary.innerHTML = `
+    <div class="sum-card"><span class="num">${total}</span><span class="lbl">toplam ürün</span></div>
+    <div class="sum-card"><span class="num">${pending}</span><span class="lbl">bekliyor</span></div>
+    <div class="sum-card"><span class="num">${completedCount}</span><span class="lbl">tamamlandı</span></div>
+    <div class="sum-card"><span class="num">${formatPrice(totalValue)}</span><span class="lbl">toplam tutar</span></div>
+  `;
+
+  clearBar.style.display = completedCount > 0 ? 'flex' : 'none';
+
+  let filtered = products;
+  if(filter === 'pending') filtered = products.filter(p=>!p.shipped);
+  if(filter === 'shipped') filtered = products.filter(p=>p.shipped && !p.completed);
+  if(filter === 'completed') filtered = products.filter(p=>p.completed);
+
+  filtered = [...filtered].sort((a,b)=>{
+    const rank = p => p.completed ? 2 : (p.shipped ? 1 : 0);
+    if(rank(a) !== rank(b)) return rank(a) - rank(b);
+    return new Date(b.dateAdded) - new Date(a.dateAdded);
+  });
+
+  if(filtered.length === 0){
+    list.innerHTML = `<div class="empty"><p>Burada henüz ürün yok.</p><p>Aşağıdaki butondan ekleyebilirsin.</p></div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(p => {
+    let statusLine = 'Eklendi: ' + formatDate(p.dateAdded);
+    if(p.shipped) statusLine = 'Kargolandı: ' + formatDate(p.dateShipped);
+    if(p.completed) statusLine = 'Tamamlandı: ' + formatDate(p.dateCompleted);
+    return `
+    <div class="card ${p.shipped ? 'shipped' : ''} ${p.completed ? 'completed' : ''}" data-id="${p.id}">
+      <button class="del-btn" data-del="${p.id}" aria-label="Sil">✕</button>
+      <div class="card-body">
+        <p class="card-name">${escapeHtml(p.name)}</p>
+        <div class="card-meta">
+          <span class="price">${formatPrice(p.price)}</span>
+          <span>${statusLine}</span>
+        </div>
+        ${p.note ? `<p class="card-note">${escapeHtml(p.note)}</p>` : ''}
+      </div>
+      <div class="stamps-col">
+        <div class="stamp-btn ${p.shipped ? 'shipped' : ''}" data-toggle-ship="${p.id}">
+          ${p.shipped ? 'KARGO-<br>LANDI' : 'KARGOLA'}
+        </div>
+        <div class="stamp-btn complete-stamp ${p.completed ? 'active' : ''} ${p.shipped ? 'enabled' : ''}" data-toggle-complete="${p.id}">
+          TAMAM-<br>LANDI
+        </div>
+      </div>
+    </div>
+  `;
+  }).join('');
+}
+
+document.getElementById('list').addEventListener('click', async (e)=>{
+  const shipToggle = e.target.closest('[data-toggle-ship]');
+  const completeToggle = e.target.closest('[data-toggle-complete]');
+  const delId = e.target.closest('[data-del]');
+
+  if(shipToggle){
+    const id = shipToggle.getAttribute('data-toggle-ship');
+    const p = products.find(x=>x.id===id);
+    if(p){
+      p.shipped = !p.shipped;
+      p.dateShipped = p.shipped ? new Date().toISOString() : null;
+      if(!p.shipped){ p.completed = false; p.dateCompleted = null; }
+      render();
+      await saveProducts();
+      showToast(p.shipped ? 'Kargolandı olarak işaretlendi' : 'Bekliyor olarak işaretlendi');
+    }
+  }else if(completeToggle){
+    const id = completeToggle.getAttribute('data-toggle-complete');
+    const p = products.find(x=>x.id===id);
+    if(p){
+      if(!p.shipped){ showToast('Önce kargolandı olarak işaretle'); return; }
+      p.completed = !p.completed;
+      p.dateCompleted = p.completed ? new Date().toISOString() : null;
+      render();
+      await saveProducts();
+      showToast(p.completed ? 'Tamamlandı olarak işaretlendi' : 'Tamamlandı işareti kaldırıldı');
+    }
+  }else if(delId){
+    const id = delId.getAttribute('data-del');
+    products = products.filter(x=>x.id!==id);
+    render();
+    await saveProducts();
+  }
+});
+
+document.getElementById('clearBtn').addEventListener('click', async ()=>{
+  const count = products.filter(p=>p.completed).length;
+  if(count === 0) return;
+  products = products.filter(p=>!p.completed);
+  render();
+  await saveProducts();
+  showToast('Tamamlanan ürünler silindi');
+});
+
+document.getElementById('tabs').addEventListener('click', (e)=>{
+  const tab = e.target.closest('.tab');
+  if(!tab) return;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  tab.classList.add('active');
+  filter = tab.getAttribute('data-filter');
+  render();
+});
+
+const modalBg = document.getElementById('modalBg');
+addBtn.addEventListener('click', ()=>{
+  document.getElementById('inpName').value='';
+  document.getElementById('inpPrice').value='';
+  document.getElementById('inpNote').value='';
+  modalBg.classList.add('open');
+  setTimeout(()=>document.getElementById('inpName').focus(), 100);
+});
+document.getElementById('cancelBtn').addEventListener('click', ()=>{
+  modalBg.classList.remove('open');
+});
+modalBg.addEventListener('click', (e)=>{
+  if(e.target === modalBg) modalBg.classList.remove('open');
+});
+
+document.getElementById('saveBtn').addEventListener('click', async ()=>{
+  const name = document.getElementById('inpName').value.trim();
+  const price = document.getElementById('inpPrice').value;
+  const note = document.getElementById('inpNote').value.trim();
+  if(!name){
+    showToast('Ürün adı gerekli');
+    return;
+  }
+  products.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    name, price: price || 0, note,
+    dateAdded: new Date().toISOString(),
+    shipped: false,
+    dateShipped: null,
+    completed: false,
+    dateCompleted: null
+  });
+  modalBg.classList.remove('open');
+  render();
+  await saveProducts();
+  showToast('Ürün eklendi');
+});
+</script>
+</body>
+</html>
