@@ -162,6 +162,28 @@
     text-overflow:ellipsis;
     white-space:nowrap;
   }
+  .platform-row{
+    display:flex;
+    gap:6px;
+    margin-top:7px;
+    flex-wrap:wrap;
+  }
+  .platform-pill{
+    font-size:11px;
+    font-weight:500;
+    padding:5px 10px;
+    border-radius:100px;
+    border:1px solid var(--line);
+    background:var(--paper-2);
+    color:var(--ink-soft);
+    cursor:pointer;
+    user-select:none;
+  }
+  .platform-pill.active{
+    background:var(--ink);
+    color:var(--paper-2);
+    border-color:var(--ink);
+  }
   .stamps-col{ flex-shrink:0; display:flex; gap:7px; }
   .stamp-btn{
     flex-shrink:0;
@@ -658,6 +680,11 @@ function render(){
           <span>${statusLine}</span>
         </div>
         ${p.note ? `<p class="card-note">${escapeHtml(p.note)}</p>` : ''}
+        <div class="platform-row">
+          ${['Dolap','Gardrops','Sahibinden'].map(name => `
+            <div class="platform-pill ${p.platform === name ? 'active' : ''}" data-platform-id="${p.id}" data-platform-name="${name}">${name}</div>
+          `).join('')}
+        </div>
       </div>
       <div class="stamps-col">
         <div class="stamp-btn ${p.shipped ? 'shipped' : ''}" data-toggle-ship="${p.id}">
@@ -676,8 +703,18 @@ document.getElementById('list').addEventListener('click', async (e)=>{
   const shipToggle = e.target.closest('[data-toggle-ship]');
   const completeToggle = e.target.closest('[data-toggle-complete]');
   const delId = e.target.closest('[data-del]');
+  const platformPill = e.target.closest('[data-platform-id]');
 
-  if(shipToggle){
+  if(platformPill){
+    const id = platformPill.getAttribute('data-platform-id');
+    const name = platformPill.getAttribute('data-platform-name');
+    const p = products.find(x=>x.id===id);
+    if(p){
+      p.platform = (p.platform === name) ? null : name;
+      render();
+      await saveProducts();
+    }
+  }else if(shipToggle){
     const id = shipToggle.getAttribute('data-toggle-ship');
     const p = products.find(x=>x.id===id);
     if(p){
@@ -755,7 +792,8 @@ document.getElementById('saveBtn').addEventListener('click', async ()=>{
     shipped: false,
     dateShipped: null,
     completed: false,
-    dateCompleted: null
+    dateCompleted: null,
+    platform: null
   });
   modalBg.classList.remove('open');
   render();
