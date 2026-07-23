@@ -8,27 +8,32 @@
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#EAE6DC;
-    --paper-2:#F4F1E9;
-    --card:#FFFDF8;
-    --ink:#28241E;
-    --ink-soft:#6B6459;
-    --line:#D8D2C2;
-    --stamp-red:#A8402C;
-    --stamp-red-dim:#EADAD3;
-    --stamp-green:#2E6B52;
-    --stamp-green-dim:#DCE8E0;
-    --stamp-blue:#2E5A6B;
-    --stamp-blue-dim:#DCE5E8;
-    --gold:#A9832E;
+    --paper:#E7ECE4;
+    --paper-2:#FFFFFF;
+    --card:#FFFFFF;
+    --ink:#1B1B1B;
+    --ink-soft:#6E6E6E;
+    --line:#DADFD8;
+    --stamp-red:#D01012;
+    --stamp-red-dim:#FBDADA;
+    --stamp-green:#00852B;
+    --stamp-green-dim:#D7EFDD;
+    --stamp-blue:#0057BF;
+    --stamp-blue-dim:#D9E6F7;
+    --gold:#D8A400;
+    --gold-bg:#FFE000;
     --radius:14px;
+    --brick-shadow: inset 0 -4px 0 rgba(0,0,0,.15), 0 3px 0 rgba(0,0,0,.08);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   body{
     margin:0;
-    background:var(--paper);
+    background-color:var(--paper);
+    background-image:
+      radial-gradient(circle, rgba(0,0,0,.06) 1.6px, transparent 1.6px);
+    background-size: 26px 26px;
     color:var(--ink);
-    font-family:'Inter',sans-serif;
+    font-family:'Nunito',sans-serif;
     min-height:100vh;
   }
   .wrap{
@@ -44,12 +49,37 @@
     gap:10px;
   }
   header h1{
-    font-family:'Space Grotesk',sans-serif;
+    font-family:'Fredoka',sans-serif;
     font-weight:700;
-    font-size:26px;
+    font-size:27px;
     margin:0 0 2px;
-    letter-spacing:-0.02em;
+    letter-spacing:-0.01em;
+    display:flex;
+    align-items:center;
+    gap:8px;
   }
+  .brick-icon{
+    display:inline-flex;
+    flex-shrink:0;
+    width:26px;
+    height:20px;
+    background:var(--stamp-red);
+    border-radius:4px;
+    box-shadow:var(--brick-shadow);
+    position:relative;
+  }
+  .brick-icon::before, .brick-icon::after{
+    content:'';
+    position:absolute;
+    top:-5px;
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--stamp-red);
+    box-shadow: inset 0 -2px 0 rgba(0,0,0,.15);
+  }
+  .brick-icon::before{ left:3px; }
+  .brick-icon::after{ right:3px; }
   header p{
     margin:0;
     font-size:13px;
@@ -75,13 +105,14 @@
   }
   .sum-card{
     background:var(--card);
-    border:1px solid var(--line);
-    border-radius:var(--radius);
+    border:2px solid var(--ink);
+    border-radius:12px;
     padding:12px 10px;
     text-align:center;
+    box-shadow:0 3px 0 rgba(0,0,0,.12);
   }
   .sum-card .num{
-    font-family:'JetBrains Mono',monospace;
+    font-family:'Nunito',sans-serif; font-weight:800;
     font-weight:600;
     font-size:19px;
     display:block;
@@ -101,10 +132,11 @@
     flex:1;
     text-align:center;
     padding:9px 2px;
-    border-radius:100px;
+    border-radius:8px;
     font-size:11.5px;
-    font-weight:500;
-    border:1px solid var(--line);
+    font-weight:700;
+    font-family:'Nunito',sans-serif;
+    border:2px solid var(--ink);
     background:var(--paper-2);
     color:var(--ink-soft);
     cursor:pointer;
@@ -112,8 +144,8 @@
     transition:all .15s ease;
   }
   .tab.active{
-    background:var(--ink);
-    color:var(--paper-2);
+    background:var(--stamp-blue);
+    color:#fff;
     border-color:var(--ink);
   }
   .list{
@@ -124,21 +156,38 @@
   .card{
     position:relative;
     background:var(--card);
-    border:1px solid var(--line);
-    border-left:4px solid var(--stamp-red);
+    border:2px solid var(--ink);
+    border-left:8px solid var(--stamp-red);
     border-radius:var(--radius);
-    padding:13px 14px;
+    padding:16px 14px 13px;
     display:flex;
     align-items:center;
     gap:12px;
-    overflow:hidden;
+    overflow:visible;
     transition:border-color .2s ease;
+    box-shadow:0 3px 0 rgba(0,0,0,.12);
   }
+  .card::before, .card::after{
+    content:'';
+    position:absolute;
+    top:-7px;
+    width:11px;
+    height:11px;
+    border-radius:50%;
+    background:var(--stamp-red);
+    border:2px solid var(--ink);
+    box-shadow: inset 0 -2px 0 rgba(0,0,0,.18);
+    transition:background .2s ease;
+  }
+  .card::before{ left:16px; }
+  .card::after{ left:34px; }
   .card.shipped{ border-left-color:var(--stamp-green); }
-  .card.completed{ border-left-color:var(--stamp-blue); opacity:.72; }
+  .card.shipped::before, .card.shipped::after{ background:var(--stamp-green); }
+  .card.completed{ border-left-color:var(--stamp-blue); opacity:.8; }
+  .card.completed::before, .card.completed::after{ background:var(--stamp-blue); }
   .card-body{ flex:1; min-width:0; padding-right:22px; }
   .card-name{
-    font-weight:600;
+    font-weight:800;
     font-size:15px;
     margin:0 0 3px;
     overflow:hidden;
@@ -149,11 +198,18 @@
     display:flex;
     align-items:center;
     gap:10px;
-    font-family:'JetBrains Mono',monospace;
+    font-family:'Nunito',sans-serif; font-weight:800;
     font-size:12.5px;
     color:var(--ink-soft);
   }
-  .card-meta .price{ color:var(--gold); font-weight:600; }
+  .card-meta .price{
+    color:var(--ink);
+    background:var(--gold-bg);
+    font-weight:800;
+    padding:2px 8px;
+    border-radius:100px;
+    border:1.5px solid var(--ink);
+  }
   .card-note{
     font-size:12px;
     color:var(--ink-soft);
@@ -170,62 +226,65 @@
   }
   .platform-pill{
     font-size:11px;
-    font-weight:500;
-    padding:5px 10px;
-    border-radius:100px;
-    border:1px solid var(--line);
+    font-weight:700;
+    font-family:'Nunito',sans-serif;
+    padding:5px 11px;
+    border-radius:8px;
+    border:2px solid var(--ink);
     background:var(--paper-2);
     color:var(--ink-soft);
     cursor:pointer;
     user-select:none;
+    box-shadow:0 2px 0 rgba(0,0,0,.15);
   }
-  .platform-pill.active{
-    background:var(--ink);
-    color:var(--paper-2);
-    border-color:var(--ink);
-  }
+  .platform-pill[data-platform-name="Dolap"].active{ background:var(--gold-bg); color:var(--ink); }
+  .platform-pill[data-platform-name="Gardrops"].active{ background:var(--stamp-blue); color:#fff; }
+  .platform-pill[data-platform-name="Sahibinden"].active{ background:var(--stamp-red); color:#fff; }
   .stamps-col{ flex-shrink:0; display:flex; gap:7px; }
   .stamp-btn{
     flex-shrink:0;
     width:46px;
     height:46px;
     border-radius:50%;
-    border:2px solid var(--stamp-red);
+    border:2.5px solid var(--ink);
     background:var(--stamp-red-dim);
     color:var(--stamp-red);
     display:flex;
     align-items:center;
     justify-content:center;
-    font-family:'Space Grotesk',sans-serif;
+    font-family:'Fredoka',sans-serif;
     font-weight:700;
     font-size:9px;
     text-align:center;
     line-height:1.1;
     cursor:pointer;
-    transform:rotate(-8deg);
+    box-shadow:0 3px 0 rgba(0,0,0,.18);
+    transform:rotate(-6deg);
     transition:transform .25s cubic-bezier(.34,1.56,.64,1), background .2s ease, color .2s ease, border-color .2s ease, opacity .2s ease;
   }
   .stamp-btn.shipped{
-    border-color:var(--stamp-green);
+    border-color:var(--ink);
     background:var(--stamp-green-dim);
     color:var(--stamp-green);
-    transform:rotate(-8deg) scale(1.06);
+    transform:rotate(-6deg) scale(1.06);
   }
   .stamp-btn.complete-stamp{
     border-color:var(--line);
     background:var(--paper-2);
     color:var(--ink-soft);
     opacity:.45;
+    box-shadow:none;
   }
   .stamp-btn.complete-stamp.active{
-    border-color:var(--stamp-blue);
+    border-color:var(--ink);
     background:var(--stamp-blue-dim);
     color:var(--stamp-blue);
     opacity:1;
-    transform:rotate(-8deg) scale(1.06);
+    box-shadow:0 3px 0 rgba(0,0,0,.18);
+    transform:rotate(-6deg) scale(1.06);
   }
-  .stamp-btn.complete-stamp.enabled{ opacity:1; }
-  .stamp-btn:active{ transform:rotate(-8deg) scale(0.9); }
+  .stamp-btn.complete-stamp.enabled{ opacity:1; box-shadow:0 3px 0 rgba(0,0,0,.18); }
+  .stamp-btn:active{ transform:rotate(-6deg) scale(0.9); }
   .del-btn{
     position:absolute;
     top:8px;
@@ -259,17 +318,18 @@
     left:50%;
     transform:translateX(-50%);
     width:min(448px, calc(100% - 32px));
-    background:var(--ink);
-    color:var(--paper-2);
-    border:none;
-    border-radius:100px;
+    background:var(--stamp-red);
+    color:#fff;
+    border:2.5px solid var(--ink);
+    border-radius:14px;
     padding:15px 0;
-    font-size:15px;
-    font-weight:600;
-    font-family:'Inter',sans-serif;
+    font-size:16px;
+    font-weight:700;
+    font-family:'Fredoka',sans-serif;
     cursor:pointer;
-    box-shadow:0 6px 20px rgba(40,36,30,.28);
+    box-shadow:0 5px 0 rgba(0,0,0,.25);
   }
+  .fab:active{ box-shadow:0 2px 0 rgba(0,0,0,.25); transform:translateX(-50%) translateY(3px); }
   .modal-bg{
     position:fixed;
     inset:0;
@@ -288,7 +348,7 @@
     padding:22px 20px 26px;
   }
   .modal h2{
-    font-family:'Space Grotesk',sans-serif;
+    font-family:'Fredoka',sans-serif;
     font-size:19px;
     margin:0 0 16px;
   }
@@ -307,7 +367,7 @@
     border:1px solid var(--line);
     background:var(--card);
     font-size:15px;
-    font-family:'Inter',sans-serif;
+    font-family:'Nunito',sans-serif;
     color:var(--ink);
   }
   .field input:focus{ outline:none; border-color:var(--ink-soft); }
@@ -322,7 +382,7 @@
     cursor:pointer;
   }
   .btn-cancel{ background:transparent; color:var(--ink-soft); }
-  .btn-save{ background:var(--ink); color:var(--paper-2); border-color:var(--ink); }
+  .btn-save{ background:var(--stamp-blue); color:#fff; border:2px solid var(--ink); font-family:'Fredoka',sans-serif; box-shadow:0 3px 0 rgba(0,0,0,.2); }
   .toast{
     position:fixed;
     top:16px;
@@ -347,7 +407,7 @@
     min-height:100vh;
   }
   .auth-screen h1{
-    font-family:'Space Grotesk',sans-serif;
+    font-family:'Fredoka',sans-serif;
     font-weight:700;
     font-size:26px;
     margin:0 0 6px;
@@ -379,8 +439,8 @@
     cursor:pointer;
   }
   .auth-toggle button.active{
-    background:var(--ink);
-    color:var(--paper-2);
+    background:var(--stamp-blue);
+    color:#fff;
   }
   .auth-error{
     background:var(--stamp-red-dim);
@@ -395,15 +455,18 @@
   .auth-submit{
     width:100%;
     padding:14px 0;
-    border-radius:100px;
-    border:none;
-    background:var(--ink);
-    color:var(--paper-2);
+    border-radius:12px;
+    border:2.5px solid var(--ink);
+    background:var(--stamp-red);
+    color:#fff;
+    font-family:'Fredoka',sans-serif;
     font-size:15px;
-    font-weight:600;
+    font-weight:700;
     cursor:pointer;
     margin-top:6px;
+    box-shadow:0 4px 0 rgba(0,0,0,.25);
   }
+  .auth-submit:active{ box-shadow:0 1px 0 rgba(0,0,0,.25); transform:translateY(3px); }
   .auth-submit:disabled{ opacity:.6; }
   .loading-screen{
     display:flex;
@@ -420,7 +483,7 @@
 <div class="loading-screen" id="loadingScreen">Yükleniyor…</div>
 
 <div class="auth-screen" id="authScreen" style="display:none;">
-  <h1>Kargo Takip</h1>
+  <h1><span class="brick-icon"></span>Kargo Takip</h1>
   <p class="sub">Verilerinize her cihazdan ulaşmak için giriş yapın.</p>
 
   <div class="auth-toggle">
@@ -445,7 +508,7 @@
 <div class="wrap" id="appScreen" style="display:none;">
   <header>
     <div>
-      <h1>Kargo Takip</h1>
+      <h1><span class="brick-icon"></span>Kargo Takip</h1>
       <p>Kargoya verince ve iş bitince damgala.</p>
     </div>
     <button class="logout-btn" id="logoutBtn">Çıkış yap</button>
