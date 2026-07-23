@@ -39,7 +39,7 @@
   .wrap{
     max-width:480px;
     margin:0 auto;
-    padding:20px 16px 100px;
+    padding:20px 16px 155px;
   }
   header{
     padding:8px 4px 18px;
@@ -330,6 +330,11 @@
     box-shadow:0 5px 0 rgba(0,0,0,.25);
   }
   .fab:active{ box-shadow:0 2px 0 rgba(0,0,0,.25); transform:translateX(-50%) translateY(3px); }
+  .fab-secondary{
+    bottom:80px;
+    background:var(--stamp-blue);
+  }
+  .fab-secondary:active{ transform:translateX(-50%) translateY(3px); }
   .modal-bg{
     position:fixed;
     inset:0;
@@ -414,6 +419,58 @@
     font-size:11px;
     color:var(--ink-soft);
     margin-top:2px;
+  }
+  .notes-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:40vh;
+    overflow-y:auto;
+    margin:14px 0 6px;
+  }
+  .note-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:var(--card);
+    border:2px solid var(--ink);
+    border-radius:10px;
+    padding:9px 10px;
+    box-shadow:0 2px 0 rgba(0,0,0,.12);
+  }
+  .note-text{
+    flex:1;
+    font-size:13.5px;
+    font-weight:600;
+    overflow-wrap:anywhere;
+  }
+  .note-sold-btn{
+    flex-shrink:0;
+    border:2px solid var(--ink);
+    background:var(--stamp-green-dim);
+    color:var(--stamp-green);
+    font-family:'Fredoka',sans-serif;
+    font-size:11px;
+    font-weight:700;
+    padding:7px 9px;
+    border-radius:8px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .note-del-btn{
+    flex-shrink:0;
+    border:none;
+    background:transparent;
+    color:var(--ink-soft);
+    font-size:14px;
+    cursor:pointer;
+    padding:4px;
+  }
+  .notes-empty{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:13px;
+    padding:20px 0;
   }
   .modal-actions{ display:flex; gap:10px; margin-top:6px; }
   .modal-actions button{
@@ -574,14 +631,16 @@
   <div class="list" id="list"></div>
 </div>
 
+<button class="fab fab-secondary" id="notesBtn" style="display:none;">📝 Henüz satılmadı</button>
 <button class="fab" id="addBtn" style="display:none;">+ Ürün ekle</button>
 
 <div class="modal-bg" id="modalBg">
   <div class="modal">
     <h2>Yeni ürün</h2>
     <div class="field">
-      <label>Ürün adı</label>
-      <input type="text" id="inpName" placeholder="Örn. Siyah deri cüzdan" maxlength="60">
+      <label>Ürün adı <span class="field-hint">— birlikte satılan başka ürün varsa "+" ile ekleyin</span></label>
+      <div id="nameRows"></div>
+      <button type="button" class="add-price-btn" id="addNameBtn">+ Ürün adı ekle</button>
     </div>
     <div class="field">
       <label>Fiyat(lar) TL <span class="field-hint">— birlikte satılan başka ürün varsa "+" ile ekleyin</span></label>
@@ -595,6 +654,23 @@
     <div class="modal-actions">
       <button class="btn-cancel" id="cancelBtn">Vazgeç</button>
       <button class="btn-save" id="saveBtn">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="notesModalBg">
+  <div class="modal">
+    <h2>Henüz satılmadı</h2>
+    <div class="field">
+      <label>Yeni not</label>
+      <div class="price-row">
+        <input type="text" id="inpNoteText" placeholder="Örn. Kırmızı kazak, XL beden, 2. el" maxlength="120">
+        <button type="button" class="remove-price" id="addNoteBtn" style="background:var(--stamp-blue-dim); color:var(--stamp-blue);">+</button>
+      </div>
+    </div>
+    <div id="notesList" class="notes-list"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="closeNotesBtn">Kapat</button>
     </div>
   </div>
 </div>
@@ -649,19 +725,25 @@ function escapeHtml(str){
   return div.innerHTML;
 }
 
+let notes = [];
+
 async function loadProducts(){
   try{
     const doc = await db.collection('users').doc(currentUser.uid).get();
-    products = doc.exists && doc.data().products ? doc.data().products : [];
+    const data = doc.exists ? doc.data() : {};
+    products = data.products || [];
+    notes = data.notes || [];
   }catch(e){
     products = [];
+    notes = [];
     showToast('Veriler yüklenemedi');
   }
   render();
+  renderNotes();
 }
 async function saveProducts(){
   try{
-    await db.collection('users').doc(currentUser.uid).set({products}, {merge:true});
+    await db.collection('users').doc(currentUser.uid).set({products, notes}, {merge:true});
   }catch(e){
     showToast('Kaydedilemedi, internet bağlantınızı kontrol edin');
   }
@@ -730,12 +812,14 @@ auth.onAuthStateChanged(async (user)=>{
     authScreen.style.display = 'none';
     appScreen.style.display = 'block';
     addBtn.style.display = 'block';
+    document.getElementById('notesBtn').style.display = 'block';
     await loadProducts();
   }else{
     currentUser = null;
     authScreen.style.display = 'block';
     appScreen.style.display = 'none';
     addBtn.style.display = 'none';
+    document.getElementById('notesBtn').style.display = 'none';
   }
 });
 
@@ -873,13 +957,23 @@ document.getElementById('tabs').addEventListener('click', (e)=>{
 
 const modalBg = document.getElementById('modalBg');
 const priceRowsEl = document.getElementById('priceRows');
-const MAX_PRICE_ROWS = 8;
+const nameRowsEl = document.getElementById('nameRows');
+const MAX_ROWS = 8;
+let pendingNoteId = null;
 
 function renderPriceRows(values){
   priceRowsEl.innerHTML = values.map((v, i) => `
     <div class="price-row">
       <input type="number" inputmode="decimal" class="price-input" placeholder="${i===0 ? 'Örn. 350' : 'Ek ürün fiyatı'}" value="${v ?? ''}">
       ${values.length > 1 ? `<button type="button" class="remove-price" data-remove-row="${i}">✕</button>` : ''}
+    </div>
+  `).join('');
+}
+function renderNameRows(values){
+  nameRowsEl.innerHTML = values.map((v, i) => `
+    <div class="price-row">
+      <input type="text" class="name-input" placeholder="${i===0 ? 'Örn. Siyah deri cüzdan' : 'Ek ürün adı'}" maxlength="60" value="${v ? escapeHtml(v) : ''}">
+      ${values.length > 1 ? `<button type="button" class="remove-price" data-remove-name-row="${i}">✕</button>` : ''}
     </div>
   `).join('');
 }
@@ -892,45 +986,76 @@ priceRowsEl.addEventListener('click', (e)=>{
   current.splice(idx, 1);
   renderPriceRows(current.length ? current : ['']);
 });
+nameRowsEl.addEventListener('click', (e)=>{
+  const rem = e.target.closest('[data-remove-name-row]');
+  if(!rem) return;
+  const idx = Number(rem.getAttribute('data-remove-name-row'));
+  const current = Array.from(nameRowsEl.querySelectorAll('.name-input')).map(i=>i.value);
+  current.splice(idx, 1);
+  renderNameRows(current.length ? current : ['']);
+});
 
 document.getElementById('addPriceBtn').addEventListener('click', ()=>{
   const current = Array.from(priceRowsEl.querySelectorAll('.price-input')).map(i=>i.value);
-  if(current.length >= MAX_PRICE_ROWS){
-    showToast('En fazla ' + MAX_PRICE_ROWS + ' fiyat ekleyebilirsin');
+  if(current.length >= MAX_ROWS){
+    showToast('En fazla ' + MAX_ROWS + ' fiyat ekleyebilirsin');
     return;
   }
   current.push('');
   renderPriceRows(current);
 });
+document.getElementById('addNameBtn').addEventListener('click', ()=>{
+  const current = Array.from(nameRowsEl.querySelectorAll('.name-input')).map(i=>i.value);
+  if(current.length >= MAX_ROWS){
+    showToast('En fazla ' + MAX_ROWS + ' ürün adı ekleyebilirsin');
+    return;
+  }
+  current.push('');
+  renderNameRows(current);
+});
 
-addBtn.addEventListener('click', ()=>{
-  document.getElementById('inpName').value='';
+function openProductModal(prefillName){
+  renderNameRows([prefillName || '']);
   renderPriceRows(['']);
   document.getElementById('inpNote').value='';
   modalBg.classList.add('open');
-  setTimeout(()=>document.getElementById('inpName').focus(), 100);
+  setTimeout(()=>{
+    const firstInput = nameRowsEl.querySelector('.name-input');
+    if(firstInput) firstInput.focus();
+  }, 100);
+}
+
+addBtn.addEventListener('click', ()=>{
+  pendingNoteId = null;
+  openProductModal('');
 });
 document.getElementById('cancelBtn').addEventListener('click', ()=>{
   modalBg.classList.remove('open');
+  pendingNoteId = null;
 });
 modalBg.addEventListener('click', (e)=>{
-  if(e.target === modalBg) modalBg.classList.remove('open');
+  if(e.target === modalBg){
+    modalBg.classList.remove('open');
+    pendingNoteId = null;
+  }
 });
 
 document.getElementById('saveBtn').addEventListener('click', async ()=>{
-  const name = document.getElementById('inpName').value.trim();
+  const names = Array.from(nameRowsEl.querySelectorAll('.name-input'))
+    .map(i => i.value.trim())
+    .filter(n => n.length > 0);
   const note = document.getElementById('inpNote').value.trim();
   const prices = Array.from(priceRowsEl.querySelectorAll('.price-input'))
     .map(i => Number(i.value))
     .filter(n => !isNaN(n) && n > 0);
-  if(!name){
+  if(names.length === 0){
     showToast('Ürün adı gerekli');
     return;
   }
   const total = prices.reduce((s,n)=>s+n, 0);
   products.push({
     id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-    name, price: total, prices: prices.length ? prices : [0], note,
+    name: names.join(' + '), price: total, prices: prices.length ? prices : [0], note,
     dateAdded: new Date().toISOString(),
     shipped: false,
     dateShipped: null,
@@ -938,11 +1063,85 @@ document.getElementById('saveBtn').addEventListener('click', async ()=>{
     dateCompleted: null,
     platform: null
   });
+  if(pendingNoteId){
+    notes = notes.filter(n => n.id !== pendingNoteId);
+    pendingNoteId = null;
+  }
   modalBg.classList.remove('open');
   render();
   await saveProducts();
   showToast('Ürün eklendi');
 });
+
+/* ---------- Henüz satılmadı: not defteri ---------- */
+const notesModalBg = document.getElementById('notesModalBg');
+const notesListEl = document.getElementById('notesList');
+const notesBtn = document.getElementById('notesBtn');
+
+function renderNotes(){
+  if(notes.length === 0){
+    notesListEl.innerHTML = `<p class="notes-empty">Henüz not yok. Satılmayı bekleyen ürünleri buraya yazabilirsin.</p>`;
+  }else{
+    notesListEl.innerHTML = [...notes].reverse().map(n => `
+      <div class="note-row" data-note-id="${n.id}">
+        <span class="note-text">${escapeHtml(n.text)}</span>
+        <button type="button" class="note-sold-btn" data-note-sold="${n.id}">Sattım →</button>
+        <button type="button" class="note-del-btn" data-note-del="${n.id}">✕</button>
+      </div>
+    `).join('');
+  }
+  const count = notes.length;
+  notesBtn.textContent = count > 0 ? `📝 Henüz satılmadı (${count})` : '📝 Henüz satılmadı';
+}
+
+notesBtn.addEventListener('click', ()=>{
+  document.getElementById('inpNoteText').value = '';
+  notesModalBg.classList.add('open');
+  setTimeout(()=>document.getElementById('inpNoteText').focus(), 100);
+});
+document.getElementById('closeNotesBtn').addEventListener('click', ()=>{
+  notesModalBg.classList.remove('open');
+});
+notesModalBg.addEventListener('click', (e)=>{
+  if(e.target === notesModalBg) notesModalBg.classList.remove('open');
+});
+
+async function addNote(){
+  const text = document.getElementById('inpNoteText').value.trim();
+  if(!text) return;
+  notes.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    text,
+    dateAdded: new Date().toISOString()
+  });
+  document.getElementById('inpNoteText').value = '';
+  renderNotes();
+  await saveProducts();
+}
+document.getElementById('addNoteBtn').addEventListener('click', addNote);
+document.getElementById('inpNoteText').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter'){ e.preventDefault(); addNote(); }
+});
+
+notesListEl.addEventListener('click', async (e)=>{
+  const soldBtn = e.target.closest('[data-note-sold]');
+  const delBtn = e.target.closest('[data-note-del]');
+  if(soldBtn){
+    const id = soldBtn.getAttribute('data-note-sold');
+    const n = notes.find(x=>x.id===id);
+    if(n){
+      pendingNoteId = id;
+      notesModalBg.classList.remove('open');
+      openProductModal(n.text);
+    }
+  }else if(delBtn){
+    const id = delBtn.getAttribute('data-note-del');
+    notes = notes.filter(x=>x.id!==id);
+    renderNotes();
+    await saveProducts();
+  }
+});
 </script>
 </body>
 </html>
+
