@@ -193,6 +193,13 @@
     overflow:hidden;
     text-overflow:ellipsis;
     white-space:nowrap;
+    cursor:pointer;
+  }
+  .card-name.expanded{
+    overflow:visible;
+    text-overflow:clip;
+    white-space:normal;
+    word-break:break-word;
   }
   .card-meta{
     display:flex;
@@ -906,12 +913,15 @@ function render(){
 }
 
 document.getElementById('list').addEventListener('click', async (e)=>{
+  const nameEl = e.target.closest('.card-name');
   const shipToggle = e.target.closest('[data-toggle-ship]');
   const completeToggle = e.target.closest('[data-toggle-complete]');
   const delId = e.target.closest('[data-del]');
   const platformPill = e.target.closest('[data-platform-id]');
 
-  if(platformPill){
+  if(nameEl){
+    nameEl.classList.toggle('expanded');
+  }else if(platformPill){
     const id = platformPill.getAttribute('data-platform-id');
     const name = platformPill.getAttribute('data-platform-name');
     const p = products.find(x=>x.id===id);
