@@ -376,6 +376,20 @@
     color:var(--ink);
   }
   .field input:focus{ outline:none; border-color:var(--ink-soft); }
+  .note-textarea{
+    width:100%;
+    min-height:110px;
+    padding:12px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--card);
+    font-size:14.5px;
+    font-family:'Nunito',sans-serif;
+    color:var(--ink);
+    resize:vertical;
+    line-height:1.5;
+  }
+  .note-textarea:focus{ outline:none; border-color:var(--ink-soft); }
   .field-hint{ font-weight:400; font-size:11px; color:var(--ink-soft); text-transform:none; }
   .price-row{ display:flex; gap:8px; margin-bottom:8px; }
   .price-row input{
@@ -403,6 +417,7 @@
   }
   .add-price-btn{
     width:100%;
+    margin-top:8px;
     padding:10px 0;
     border-radius:10px;
     border:2px dashed var(--line);
@@ -430,7 +445,7 @@
   }
   .note-row{
     display:flex;
-    align-items:center;
+    align-items:flex-start;
     gap:8px;
     background:var(--card);
     border:2px solid var(--ink);
@@ -663,10 +678,8 @@
     <h2>Henüz satılmadı</h2>
     <div class="field">
       <label>Yeni not</label>
-      <div class="price-row">
-        <input type="text" id="inpNoteText" placeholder="Örn. Kırmızı kazak, XL beden, 2. el" maxlength="120">
-        <button type="button" class="remove-price" id="addNoteBtn" style="background:var(--stamp-blue-dim); color:var(--stamp-blue);">+</button>
-      </div>
+      <textarea id="inpNoteText" class="note-textarea" rows="4" placeholder="Örn. Kırmızı kazak, XL beden, 2. el&#10;İstediğin kadar satır yazabilirsin" maxlength="500"></textarea>
+      <button type="button" class="add-price-btn" id="addNoteBtn">+ Not ekle</button>
     </div>
     <div id="notesList" class="notes-list"></div>
     <div class="modal-actions">
@@ -1084,7 +1097,7 @@ function renderNotes(){
   }else{
     notesListEl.innerHTML = [...notes].reverse().map(n => `
       <div class="note-row" data-note-id="${n.id}">
-        <span class="note-text">${escapeHtml(n.text)}</span>
+        <span class="note-text">${escapeHtml(n.text).replace(/\n/g,'<br>')}</span>
         <button type="button" class="note-sold-btn" data-note-sold="${n.id}">Sattım →</button>
         <button type="button" class="note-del-btn" data-note-del="${n.id}">✕</button>
       </div>
@@ -1119,9 +1132,6 @@ async function addNote(){
   await saveProducts();
 }
 document.getElementById('addNoteBtn').addEventListener('click', addNote);
-document.getElementById('inpNoteText').addEventListener('keydown', (e)=>{
-  if(e.key === 'Enter'){ e.preventDefault(); addNote(); }
-});
 
 notesListEl.addEventListener('click', async (e)=>{
   const soldBtn = e.target.closest('[data-note-sold]');
