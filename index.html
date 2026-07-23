@@ -1,868 +1,734 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Kargo Takip</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-  :root{
-    --paper:#E7ECE4;
-    --paper-2:#FFFFFF;
-    --card:#FFFFFF;
-    --ink:#1B1B1B;
-    --ink-soft:#6E6E6E;
-    --line:#DADFD8;
-    --stamp-red:#D01012;
-    --stamp-red-dim:#FBDADA;
-    --stamp-green:#00852B;
-    --stamp-green-dim:#D7EFDD;
-    --stamp-blue:#0057BF;
-    --stamp-blue-dim:#D9E6F7;
-    --gold:#D8A400;
-    --gold-bg:#FFE000;
-    --radius:14px;
-    --brick-shadow: inset 0 -4px 0 rgba(0,0,0,.15), 0 3px 0 rgba(0,0,0,.08);
-  }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  body{
-    margin:0;
-    background-color:var(--paper);
-    background-image:
-      radial-gradient(circle, rgba(0,0,0,.06) 1.6px, transparent 1.6px);
-    background-size: 26px 26px;
-    color:var(--ink);
-    font-family:'Nunito',sans-serif;
-    min-height:100vh;
-  }
-  .wrap{
-    max-width:480px;
-    margin:0 auto;
-    padding:20px 16px 100px;
-  }
-  header{
-    padding:8px 4px 18px;
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    gap:10px;
-  }
-  header h1{
-    font-family:'Fredoka',sans-serif;
-    font-weight:700;
-    font-size:27px;
-    margin:0 0 2px;
-    letter-spacing:-0.01em;
-    display:flex;
-    align-items:center;
-    gap:8px;
-  }
-  .brick-icon{
-    display:inline-flex;
-    flex-shrink:0;
-    width:26px;
-    height:20px;
-    background:var(--stamp-red);
-    border-radius:4px;
-    box-shadow:var(--brick-shadow);
-    position:relative;
-  }
-  .brick-icon::before, .brick-icon::after{
-    content:'';
-    position:absolute;
-    top:-5px;
-    width:8px;
-    height:8px;
-    border-radius:50%;
-    background:var(--stamp-red);
-    box-shadow: inset 0 -2px 0 rgba(0,0,0,.15);
-  }
-  .brick-icon::before{ left:3px; }
-  .brick-icon::after{ right:3px; }
-  header p{
-    margin:0;
-    font-size:13px;
-    color:var(--ink-soft);
-  }
-  .logout-btn{
-    flex-shrink:0;
-    border:1px solid var(--line);
-    background:var(--paper-2);
-    color:var(--ink-soft);
-    font-size:12px;
-    font-weight:500;
-    padding:8px 12px;
-    border-radius:100px;
-    cursor:pointer;
-    margin-top:4px;
-  }
-  .summary{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:10px;
-    margin-bottom:18px;
-  }
-  .sum-card{
-    background:var(--card);
-    border:2px solid var(--ink);
-    border-radius:12px;
-    padding:12px 10px;
-    text-align:center;
-    box-shadow:0 3px 0 rgba(0,0,0,.12);
-  }
-  .sum-card .num{
-    font-family:'Nunito',sans-serif; font-weight:800;
-    font-weight:600;
-    font-size:19px;
-    display:block;
-  }
-  .sum-card .lbl{
-    font-size:11px;
-    color:var(--ink-soft);
-    margin-top:2px;
-    display:block;
-  }
-  .tabs{
-    display:flex;
-    gap:8px;
-    margin-bottom:16px;
-  }
-  .tab{
-    flex:1;
-    text-align:center;
-    padding:9px 2px;
-    border-radius:8px;
-    font-size:11.5px;
-    font-weight:700;
-    font-family:'Nunito',sans-serif;
-    border:2px solid var(--ink);
-    background:var(--paper-2);
-    color:var(--ink-soft);
-    cursor:pointer;
-    user-select:none;
-    transition:all .15s ease;
-  }
-  .tab.active{
-    background:var(--stamp-blue);
-    color:#fff;
-    border-color:var(--ink);
-  }
-  .list{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
-  .card{
-    position:relative;
-    background:var(--card);
-    border:2px solid var(--ink);
-    border-left:8px solid var(--stamp-red);
-    border-radius:var(--radius);
-    padding:16px 14px 13px;
-    display:flex;
-    align-items:center;
-    gap:12px;
-    overflow:visible;
-    transition:border-color .2s ease;
-    box-shadow:0 3px 0 rgba(0,0,0,.12);
-  }
-  .card::before, .card::after{
-    content:'';
-    position:absolute;
-    top:-7px;
-    width:11px;
-    height:11px;
-    border-radius:50%;
-    background:var(--stamp-red);
-    border:2px solid var(--ink);
-    box-shadow: inset 0 -2px 0 rgba(0,0,0,.18);
-    transition:background .2s ease;
-  }
-  .card::before{ left:16px; }
-  .card::after{ left:34px; }
-  .card.shipped{ border-left-color:var(--stamp-green); }
-  .card.shipped::before, .card.shipped::after{ background:var(--stamp-green); }
-  .card.completed{ border-left-color:var(--stamp-blue); opacity:.8; }
-  .card.completed::before, .card.completed::after{ background:var(--stamp-blue); }
-  .card-body{ flex:1; min-width:0; padding-right:22px; }
-  .card-name{
-    font-weight:800;
-    font-size:15px;
-    margin:0 0 3px;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-  }
-  .card-meta{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-family:'Nunito',sans-serif; font-weight:800;
-    font-size:12.5px;
-    color:var(--ink-soft);
-  }
-  .card-meta .price{
-    color:var(--ink);
-    background:var(--gold-bg);
-    font-weight:800;
-    padding:2px 8px;
-    border-radius:100px;
-    border:1.5px solid var(--ink);
-  }
-  .card-note{
-    font-size:12px;
-    color:var(--ink-soft);
-    margin-top:3px;
-    overflow:hidden;
-    text-overflow:ellipsis;
-    white-space:nowrap;
-  }
-  .platform-row{
-    display:flex;
-    gap:6px;
-    margin-top:7px;
-    flex-wrap:wrap;
-  }
-  .platform-pill{
-    font-size:11px;
-    font-weight:700;
-    font-family:'Nunito',sans-serif;
-    padding:5px 11px;
-    border-radius:8px;
-    border:2px solid var(--ink);
-    background:var(--paper-2);
-    color:var(--ink-soft);
-    cursor:pointer;
-    user-select:none;
-    box-shadow:0 2px 0 rgba(0,0,0,.15);
-  }
-  .platform-pill[data-platform-name="Dolap"].active{ background:var(--gold-bg); color:var(--ink); }
-  .platform-pill[data-platform-name="Gardrops"].active{ background:var(--stamp-blue); color:#fff; }
-  .platform-pill[data-platform-name="Sahibinden"].active{ background:var(--stamp-red); color:#fff; }
-  .stamps-col{ flex-shrink:0; display:flex; gap:7px; }
-  .stamp-btn{
-    flex-shrink:0;
-    width:46px;
-    height:46px;
-    border-radius:50%;
-    border:2.5px solid var(--ink);
-    background:var(--stamp-red-dim);
-    color:var(--stamp-red);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-family:'Fredoka',sans-serif;
-    font-weight:700;
-    font-size:9px;
-    text-align:center;
-    line-height:1.1;
-    cursor:pointer;
-    box-shadow:0 3px 0 rgba(0,0,0,.18);
-    transform:rotate(-6deg);
-    transition:transform .25s cubic-bezier(.34,1.56,.64,1), background .2s ease, color .2s ease, border-color .2s ease, opacity .2s ease;
-  }
-  .stamp-btn.shipped{
-    border-color:var(--ink);
-    background:var(--stamp-green-dim);
-    color:var(--stamp-green);
-    transform:rotate(-6deg) scale(1.06);
-  }
-  .stamp-btn.complete-stamp{
-    border-color:var(--line);
-    background:var(--paper-2);
-    color:var(--ink-soft);
-    opacity:.45;
-    box-shadow:none;
-  }
-  .stamp-btn.complete-stamp.active{
-    border-color:var(--ink);
-    background:var(--stamp-blue-dim);
-    color:var(--stamp-blue);
-    opacity:1;
-    box-shadow:0 3px 0 rgba(0,0,0,.18);
-    transform:rotate(-6deg) scale(1.06);
-  }
-  .stamp-btn.complete-stamp.enabled{ opacity:1; box-shadow:0 3px 0 rgba(0,0,0,.18); }
-  .stamp-btn:active{ transform:rotate(-6deg) scale(0.9); }
-  .del-btn{
-    position:absolute;
-    top:8px;
-    right:8px;
-    width:24px;
-    height:24px;
-    border-radius:50%;
-    border:none;
-    background:transparent;
-    color:var(--ink-soft);
-    font-size:14px;
-    cursor:pointer;
-    line-height:1;
-    padding:0;
-  }
-  .clear-bar{ display:flex; justify-content:flex-end; margin:-8px 0 12px; }
-  .clear-bar button{
-    border:none;
-    background:transparent;
-    color:var(--stamp-red);
-    font-size:12.5px;
-    font-weight:500;
-    cursor:pointer;
-    padding:4px 2px;
-  }
-  .empty{ text-align:center; padding:50px 20px; color:var(--ink-soft); }
-  .empty p{ margin:0 0 4px; font-size:14px; }
-  .fab{
-    position:fixed;
-    bottom:22px;
-    left:50%;
-    transform:translateX(-50%);
-    width:min(448px, calc(100% - 32px));
-    background:var(--stamp-red);
-    color:#fff;
-    border:2.5px solid var(--ink);
-    border-radius:14px;
-    padding:15px 0;
-    font-size:16px;
-    font-weight:700;
-    font-family:'Fredoka',sans-serif;
-    cursor:pointer;
-    box-shadow:0 5px 0 rgba(0,0,0,.25);
-  }
-  .fab:active{ box-shadow:0 2px 0 rgba(0,0,0,.25); transform:translateX(-50%) translateY(3px); }
-  .modal-bg{
-    position:fixed;
-    inset:0;
-    background:rgba(30,27,22,.45);
-    display:none;
-    align-items:flex-end;
-    justify-content:center;
-    z-index:20;
-  }
-  .modal-bg.open{ display:flex; }
-  .modal{
-    background:var(--paper-2);
-    width:100%;
-    max-width:480px;
-    border-radius:20px 20px 0 0;
-    padding:22px 20px 26px;
-  }
-  .modal h2{
-    font-family:'Fredoka',sans-serif;
-    font-size:19px;
-    margin:0 0 16px;
-  }
-  .field{ margin-bottom:12px; }
-  .field label{
-    display:block;
-    font-size:12px;
-    color:var(--ink-soft);
-    margin-bottom:5px;
-    font-weight:500;
-  }
-  .field input{
-    width:100%;
-    padding:11px 12px;
-    border-radius:10px;
-    border:1px solid var(--line);
-    background:var(--card);
-    font-size:15px;
-    font-family:'Nunito',sans-serif;
-    color:var(--ink);
-  }
-  .field input:focus{ outline:none; border-color:var(--ink-soft); }
-  .modal-actions{ display:flex; gap:10px; margin-top:6px; }
-  .modal-actions button{
-    flex:1;
-    padding:13px 0;
-    border-radius:100px;
-    font-size:14px;
-    font-weight:600;
-    border:1px solid var(--line);
-    cursor:pointer;
-  }
-  .btn-cancel{ background:transparent; color:var(--ink-soft); }
-  .btn-save{ background:var(--stamp-blue); color:#fff; border:2px solid var(--ink); font-family:'Fredoka',sans-serif; box-shadow:0 3px 0 rgba(0,0,0,.2); }
-  .toast{
-    position:fixed;
-    top:16px;
-    left:50%;
-    transform:translateX(-50%);
-    background:var(--ink);
-    color:var(--paper-2);
-    padding:10px 18px;
-    border-radius:100px;
-    font-size:13px;
-    opacity:0;
-    pointer-events:none;
-    transition:opacity .25s ease;
-    z-index:30;
-  }
-  .toast.show{ opacity:1; }
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { auth, db } from './firebase';
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  User,
+} from 'firebase/auth';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
-  .auth-screen{
-    max-width:380px;
-    margin:0 auto;
-    padding:60px 20px 40px;
-    min-height:100vh;
-  }
-  .auth-screen h1{
-    font-family:'Fredoka',sans-serif;
-    font-weight:700;
-    font-size:26px;
-    margin:0 0 6px;
-    text-align:center;
-  }
-  .auth-screen p.sub{
-    text-align:center;
-    color:var(--ink-soft);
-    font-size:13px;
-    margin:0 0 28px;
-  }
-  .auth-toggle{
-    display:flex;
-    background:var(--paper-2);
-    border-radius:100px;
-    padding:4px;
-    margin-bottom:22px;
-    border:1px solid var(--line);
-  }
-  .auth-toggle button{
-    flex:1;
-    border:none;
-    background:transparent;
-    padding:10px 0;
-    border-radius:100px;
-    font-size:13px;
-    font-weight:600;
-    color:var(--ink-soft);
-    cursor:pointer;
-  }
-  .auth-toggle button.active{
-    background:var(--stamp-blue);
-    color:#fff;
-  }
-  .auth-error{
-    background:var(--stamp-red-dim);
-    color:var(--stamp-red);
-    border-radius:10px;
-    padding:10px 12px;
-    font-size:12.5px;
-    margin-bottom:14px;
-    display:none;
-  }
-  .auth-error.show{ display:block; }
-  .auth-submit{
-    width:100%;
-    padding:14px 0;
-    border-radius:12px;
-    border:2.5px solid var(--ink);
-    background:var(--stamp-red);
-    color:#fff;
-    font-family:'Fredoka',sans-serif;
-    font-size:15px;
-    font-weight:700;
-    cursor:pointer;
-    margin-top:6px;
-    box-shadow:0 4px 0 rgba(0,0,0,.25);
-  }
-  .auth-submit:active{ box-shadow:0 1px 0 rgba(0,0,0,.25); transform:translateY(3px); }
-  .auth-submit:disabled{ opacity:.6; }
-  .loading-screen{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    min-height:100vh;
-    color:var(--ink-soft);
-    font-size:14px;
-  }
-</style>
-</head>
-<body>
-
-<div class="loading-screen" id="loadingScreen">Yükleniyor…</div>
-
-<div class="auth-screen" id="authScreen" style="display:none;">
-  <h1><span class="brick-icon"></span>Kargo Takip</h1>
-  <p class="sub">Verilerinize her cihazdan ulaşmak için giriş yapın.</p>
-
-  <div class="auth-toggle">
-    <button id="tabLogin" class="active">Giriş yap</button>
-    <button id="tabSignup">Üye ol</button>
-  </div>
-
-  <div class="auth-error" id="authError"></div>
-
-  <div class="field">
-    <label>E-posta</label>
-    <input type="email" id="authEmail" placeholder="ornek@mail.com" autocomplete="email">
-  </div>
-  <div class="field">
-    <label>Şifre</label>
-    <input type="password" id="authPassword" placeholder="En az 6 karakter" autocomplete="current-password">
-  </div>
-
-  <button class="auth-submit" id="authSubmit">Giriş yap</button>
-</div>
-
-<div class="wrap" id="appScreen" style="display:none;">
-  <header>
-    <div>
-      <h1><span class="brick-icon"></span>Kargo Takip</h1>
-      <p>Kargoya verince ve iş bitince damgala.</p>
-    </div>
-    <button class="logout-btn" id="logoutBtn">Çıkış yap</button>
-  </header>
-
-  <div class="summary" id="summary"></div>
-
-  <div class="tabs" id="tabs">
-    <div class="tab active" data-filter="all">Tümü</div>
-    <div class="tab" data-filter="pending">Bekliyor</div>
-    <div class="tab" data-filter="shipped">Kargolandı</div>
-    <div class="tab" data-filter="completed">Tamamlandı</div>
-  </div>
-
-  <div class="clear-bar" id="clearBar" style="display:none;">
-    <button id="clearBtn">Tamamlananları sil</button>
-  </div>
-
-  <div class="list" id="list"></div>
-</div>
-
-<button class="fab" id="addBtn" style="display:none;">+ Ürün ekle</button>
-
-<div class="modal-bg" id="modalBg">
-  <div class="modal">
-    <h2>Yeni ürün</h2>
-    <div class="field">
-      <label>Ürün adı</label>
-      <input type="text" id="inpName" placeholder="Örn. Siyah deri cüzdan" maxlength="60">
-    </div>
-    <div class="field">
-      <label>Fiyat (TL)</label>
-      <input type="number" id="inpPrice" placeholder="Örn. 350" inputmode="decimal">
-    </div>
-    <div class="field">
-      <label>Not (opsiyonel)</label>
-      <input type="text" id="inpNote" placeholder="Örn. Alıcı: Ayşe, adres notu vb." maxlength="80">
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" id="cancelBtn">Vazgeç</button>
-      <button class="btn-save" id="saveBtn">Kaydet</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script>
-/* ============================================================
-   1) FIREBASE AYARLARI
-   Firebase konsolundan aldığınız bilgileri buraya yapıştırın.
-   Rehber: mesajın altındaki kurulum adımlarına bakın.
-============================================================ */
-const firebaseConfig = {
-  apiKey: "AIzaSyCqu_qHvSyMQ6iFkcytrEIT0gUBVCHLqOM",
-  authDomain: "karalitakip.firebaseapp.com",
-  projectId: "karalitakip",
-  storageBucket: "karalitakip.firebasestorage.app",
-  messagingSenderId: "836733462856",
-  appId: "1:836733462856:web:9456a49cdbf1fce89d6b7d",
-  measurementId: "G-743569ZYG5"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-
-let products = [];
-let filter = 'all';
-let currentUser = null;
-let authMode = 'login';
-
-function formatPrice(n){
-  const num = Number(n) || 0;
-  return num.toLocaleString('tr-TR', {maximumFractionDigits:2}) + ' TL';
-}
-function formatDate(iso){
-  const d = new Date(iso);
-  return d.toLocaleDateString('tr-TR', {day:'2-digit', month:'2-digit', year:'2-digit'});
-}
-function showToast(msg){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 1500);
-}
-function escapeHtml(str){
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+/* ─── types ─── */
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  prices: number[];
+  note: string;
+  dateAdded: string;
+  shipped: boolean;
+  dateShipped: string | null;
+  completed: boolean;
+  dateCompleted: string | null;
+  platform: string | null;
 }
 
-async function loadProducts(){
-  try{
-    const doc = await db.collection('users').doc(currentUser.uid).get();
-    products = doc.exists && doc.data().products ? doc.data().products : [];
-  }catch(e){
-    products = [];
-    showToast('Veriler yüklenemedi');
-  }
-  render();
-}
-async function saveProducts(){
-  try{
-    await db.collection('users').doc(currentUser.uid).set({products}, {merge:true});
-  }catch(e){
-    showToast('Kaydedilemedi, internet bağlantınızı kontrol edin');
-  }
-}
+type Filter = 'all' | 'pending' | 'shipped' | 'completed';
+type AuthMode = 'login' | 'signup';
 
-const authScreen = document.getElementById('authScreen');
-const appScreen = document.getElementById('appScreen');
-const loadingScreen = document.getElementById('loadingScreen');
-const addBtn = document.getElementById('addBtn');
-const authError = document.getElementById('authError');
-
-function setAuthMode(mode){
-  authMode = mode;
-  document.getElementById('tabLogin').classList.toggle('active', mode==='login');
-  document.getElementById('tabSignup').classList.toggle('active', mode==='signup');
-  document.getElementById('authSubmit').textContent = mode==='login' ? 'Giriş yap' : 'Hesap oluştur';
-  authError.classList.remove('show');
+/* ─── helpers ─── */
+function formatPrice(n: number) {
+  return (Number(n) || 0).toLocaleString('tr-TR', { maximumFractionDigits: 2 }) + ' TL';
 }
-document.getElementById('tabLogin').addEventListener('click', ()=>setAuthMode('login'));
-document.getElementById('tabSignup').addEventListener('click', ()=>setAuthMode('signup'));
-
-function authErrorMessage(code){
-  const map = {
-    'auth/invalid-email':'Geçersiz e-posta adresi.',
-    'auth/user-not-found':'Bu e-posta ile kayıtlı hesap yok, önce üye olun.',
-    'auth/wrong-password':'Şifre hatalı.',
-    'auth/email-already-in-use':'Bu e-posta zaten kayıtlı, giriş yapmayı deneyin.',
-    'auth/weak-password':'Şifre en az 6 karakter olmalı.',
-    'auth/invalid-credential':'E-posta veya şifre hatalı.'
+function formatDate(iso: string | null) {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+}
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+function authErrMsg(code: string) {
+  const map: Record<string, string> = {
+    'auth/invalid-email': 'Geçersiz e-posta adresi.',
+    'auth/user-not-found': 'Bu e-posta ile kayıtlı hesap yok, önce üye olun.',
+    'auth/wrong-password': 'Şifre hatalı.',
+    'auth/email-already-in-use': 'Bu e-posta zaten kayıtlı, giriş yapmayı deneyin.',
+    'auth/weak-password': 'Şifre en az 6 karakter olmalı.',
+    'auth/invalid-credential': 'E-posta veya şifre hatalı.',
   };
   return map[code] || 'Bir şeyler ters gitti, tekrar deneyin.';
 }
 
-document.getElementById('authSubmit').addEventListener('click', async ()=>{
-  const email = document.getElementById('authEmail').value.trim();
-  const password = document.getElementById('authPassword').value;
-  authError.classList.remove('show');
-  if(!email || !password){
-    authError.textContent = 'E-posta ve şifre girin.';
-    authError.classList.add('show');
-    return;
-  }
-  const btn = document.getElementById('authSubmit');
-  btn.disabled = true;
-  try{
-    if(authMode === 'login'){
-      await auth.signInWithEmailAndPassword(email, password);
-    }else{
-      await auth.createUserWithEmailAndPassword(email, password);
+/* ─── BrickIcon ─── */
+function BrickIcon() {
+  return <span className="brick-icon" />;
+}
+
+/* ─── Toast ─── */
+function Toast({ msg }: { msg: string }) {
+  return (
+    <div className="toast-wrap">
+      {msg}
+    </div>
+  );
+}
+
+/* ─── AddModal ─── */
+const MAX_PRICES = 8;
+
+function AddModal({
+  open,
+  onClose,
+  onSave,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onSave: (name: string, prices: number[], note: string) => void;
+}) {
+  const [name, setName] = useState('');
+  const [note, setNote] = useState('');
+  const [priceValues, setPriceValues] = useState<string[]>(['']);
+  const nameRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) {
+      setName('');
+      setNote('');
+      setPriceValues(['']);
+      setTimeout(() => nameRef.current?.focus(), 120);
     }
-  }catch(e){
-    authError.textContent = authErrorMessage(e.code);
-    authError.classList.add('show');
-  }
-  btn.disabled = false;
-});
+  }, [open]);
 
-document.getElementById('logoutBtn').addEventListener('click', async ()=>{
-  await auth.signOut();
-});
+  const updatePrice = (idx: number, val: string) => {
+    setPriceValues(prev => prev.map((v, i) => (i === idx ? val : v)));
+  };
+  const removePrice = (idx: number) => {
+    setPriceValues(prev => prev.filter((_, i) => i !== idx));
+  };
+  const addPrice = () => {
+    if (priceValues.length >= MAX_PRICES) return;
+    setPriceValues(prev => [...prev, '']);
+  };
 
-auth.onAuthStateChanged(async (user)=>{
-  loadingScreen.style.display = 'none';
-  if(user){
-    currentUser = user;
-    authScreen.style.display = 'none';
-    appScreen.style.display = 'block';
-    addBtn.style.display = 'block';
-    await loadProducts();
-  }else{
-    currentUser = null;
-    authScreen.style.display = 'block';
-    appScreen.style.display = 'none';
-    addBtn.style.display = 'none';
-  }
-});
+  const totalPrice = priceValues
+    .map(v => parseFloat(v))
+    .filter(n => !isNaN(n) && n > 0)
+    .reduce((s, n) => s + n, 0);
 
-function render(){
-  const list = document.getElementById('list');
-  const summary = document.getElementById('summary');
-  const clearBar = document.getElementById('clearBar');
+  const handleSave = () => {
+    if (!name.trim()) return;
+    const prices = priceValues
+      .map(v => parseFloat(v))
+      .filter(n => !isNaN(n) && n > 0);
+    onSave(name.trim(), prices, note.trim());
+  };
 
-  const total = products.length;
-  const completedCount = products.filter(p=>p.completed).length;
-  const pending = products.filter(p=>!p.shipped).length;
-  const totalValue = products.reduce((s,p)=>s+(Number(p.price)||0),0);
+  if (!open) return null;
 
-  summary.innerHTML = `
-    <div class="sum-card"><span class="num">${total}</span><span class="lbl">toplam ürün</span></div>
-    <div class="sum-card"><span class="num">${pending}</span><span class="lbl">bekliyor</span></div>
-    <div class="sum-card"><span class="num">${completedCount}</span><span class="lbl">tamamlandı</span></div>
-    <div class="sum-card"><span class="num">${formatPrice(totalValue)}</span><span class="lbl">toplam tutar</span></div>
-  `;
+  return (
+    <div className="modal-bg" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="modal-sheet">
+        <h2 className="fredoka" style={{ fontSize: 19, margin: '0 0 16px', color: 'var(--ink)' }}>
+          Yeni ürün
+        </h2>
 
-  clearBar.style.display = completedCount > 0 ? 'flex' : 'none';
-
-  let filtered = products;
-  if(filter === 'pending') filtered = products.filter(p=>!p.shipped);
-  if(filter === 'shipped') filtered = products.filter(p=>p.shipped && !p.completed);
-  if(filter === 'completed') filtered = products.filter(p=>p.completed);
-
-  filtered = [...filtered].sort((a,b)=>{
-    const rank = p => p.completed ? 2 : (p.shipped ? 1 : 0);
-    if(rank(a) !== rank(b)) return rank(a) - rank(b);
-    return new Date(b.dateAdded) - new Date(a.dateAdded);
-  });
-
-  if(filtered.length === 0){
-    list.innerHTML = `<div class="empty"><p>Burada henüz ürün yok.</p><p>Aşağıdaki butondan ekleyebilirsin.</p></div>`;
-    return;
-  }
-
-  list.innerHTML = filtered.map(p => {
-    let statusLine = 'Eklendi: ' + formatDate(p.dateAdded);
-    if(p.shipped) statusLine = 'Kargolandı: ' + formatDate(p.dateShipped);
-    if(p.completed) statusLine = 'Tamamlandı: ' + formatDate(p.dateCompleted);
-    return `
-    <div class="card ${p.shipped ? 'shipped' : ''} ${p.completed ? 'completed' : ''}" data-id="${p.id}">
-      <button class="del-btn" data-del="${p.id}" aria-label="Sil">✕</button>
-      <div class="card-body">
-        <p class="card-name">${escapeHtml(p.name)}</p>
-        <div class="card-meta">
-          <span class="price">${formatPrice(p.price)}</span>
-          <span>${statusLine}</span>
+        {/* Ürün adı */}
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ display: 'block', fontSize: 12, color: 'var(--ink-soft)', marginBottom: 5, fontWeight: 600 }}>
+            Ürün adı
+          </label>
+          <input
+            ref={nameRef}
+            className="kargo-input"
+            type="text"
+            maxLength={60}
+            placeholder="Örn. Siyah deri cüzdan"
+            value={name}
+            onChange={e => setName(e.target.value)}
+          />
         </div>
-        ${p.note ? `<p class="card-note">${escapeHtml(p.note)}</p>` : ''}
-        <div class="platform-row">
-          ${['Dolap','Gardrops','Sahibinden'].map(name => `
-            <div class="platform-pill ${p.platform === name ? 'active' : ''}" data-platform-id="${p.id}" data-platform-name="${name}">${name}</div>
-          `).join('')}
+
+        {/* Fiyat(lar) */}
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ display: 'block', fontSize: 12, color: 'var(--ink-soft)', marginBottom: 5, fontWeight: 600 }}>
+            Fiyat(lar) TL{' '}
+            <span style={{ fontWeight: 400, fontSize: 11 }}>
+              — birlikte satılan başka ürün varsa "+ Fiyat ekle" ile ekleyin
+            </span>
+          </label>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
+            {priceValues.map((val, idx) => (
+              <PriceRow
+                key={idx}
+                index={idx}
+                value={val}
+                isOnly={priceValues.length === 1}
+                onChange={v => updatePrice(idx, v)}
+                onRemove={() => removePrice(idx)}
+              />
+            ))}
+          </div>
+
+          {/* Toplam göster */}
+          {priceValues.length > 1 && totalPrice > 0 && (
+            <div style={{ fontSize: 11, color: 'var(--ink-soft)', fontWeight: 700, marginBottom: 6 }}>
+              Toplam: {formatPrice(totalPrice)}
+              {' · '}
+              {priceValues
+                .map(v => parseFloat(v))
+                .filter(n => !isNaN(n) && n > 0)
+                .map(n => formatPrice(n))
+                .join(' + ')}
+            </div>
+          )}
+
+          {priceValues.length < MAX_PRICES && (
+            <button className="add-price-btn" type="button" onClick={addPrice}>
+              + Fiyat ekle
+            </button>
+          )}
         </div>
-      </div>
-      <div class="stamps-col">
-        <div class="stamp-btn ${p.shipped ? 'shipped' : ''}" data-toggle-ship="${p.id}">
-          ${p.shipped ? 'KARGO-<br>LANDI' : 'KARGOLA'}
+
+        {/* Not */}
+        <div style={{ marginBottom: 12 }}>
+          <label style={{ display: 'block', fontSize: 12, color: 'var(--ink-soft)', marginBottom: 5, fontWeight: 600 }}>
+            Not <span style={{ fontWeight: 400 }}>(opsiyonel)</span>
+          </label>
+          <input
+            className="kargo-input"
+            type="text"
+            maxLength={80}
+            placeholder="Örn. Alıcı: Ayşe, adres notu vb."
+            value={note}
+            onChange={e => setNote(e.target.value)}
+          />
         </div>
-        <div class="stamp-btn complete-stamp ${p.completed ? 'active' : ''} ${p.shipped ? 'enabled' : ''}" data-toggle-complete="${p.id}">
-          TAMAM-<br>LANDI
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1,
+              padding: '13px 0',
+              borderRadius: 100,
+              fontSize: 14,
+              fontWeight: 600,
+              border: '1px solid var(--line)',
+              background: 'transparent',
+              color: 'var(--ink-soft)',
+              cursor: 'pointer',
+            }}
+          >
+            Vazgeç
+          </button>
+          <button
+            onClick={handleSave}
+            className="fredoka"
+            style={{
+              flex: 1,
+              padding: '13px 0',
+              borderRadius: 100,
+              fontSize: 14,
+              fontWeight: 700,
+              border: '2px solid var(--ink)',
+              background: 'var(--stamp-blue)',
+              color: '#fff',
+              cursor: 'pointer',
+              boxShadow: '0 3px 0 rgba(0,0,0,.2)',
+            }}
+          >
+            Kaydet
+          </button>
         </div>
       </div>
     </div>
-  `;
-  }).join('');
+  );
 }
 
-document.getElementById('list').addEventListener('click', async (e)=>{
-  const shipToggle = e.target.closest('[data-toggle-ship]');
-  const completeToggle = e.target.closest('[data-toggle-complete]');
-  const delId = e.target.closest('[data-del]');
-  const platformPill = e.target.closest('[data-platform-id]');
+/* ─── PriceRow ─── */
+function PriceRow({
+  index,
+  value,
+  isOnly,
+  onChange,
+  onRemove,
+}: {
+  index: number;
+  value: string;
+  isOnly: boolean;
+  onChange: (v: string) => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+      <input
+        className="price-input-field"
+        type="number"
+        inputMode="decimal"
+        placeholder={index === 0 ? 'Örn. 350' : 'Ek ürün fiyatı'}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        style={{ flex: 1 }}
+      />
+      {!isOnly && (
+        <button
+          type="button"
+          onClick={onRemove}
+          style={{
+            flexShrink: 0,
+            width: 38,
+            height: 38,
+            borderRadius: 10,
+            border: '2px solid var(--ink)',
+            background: 'var(--stamp-red-dim)',
+            color: 'var(--stamp-red)',
+            fontSize: 16,
+            fontWeight: 700,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          ✕
+        </button>
+      )}
+    </div>
+  );
+}
 
-  if(platformPill){
-    const id = platformPill.getAttribute('data-platform-id');
-    const name = platformPill.getAttribute('data-platform-name');
-    const p = products.find(x=>x.id===id);
-    if(p){
-      p.platform = (p.platform === name) ? null : name;
-      render();
-      await saveProducts();
+/* ─── ProductCard ─── */
+function ProductCard({
+  product,
+  onToggleShip,
+  onToggleComplete,
+  onDelete,
+  onPlatform,
+}: {
+  product: Product;
+  onToggleShip: () => void;
+  onToggleComplete: () => void;
+  onDelete: () => void;
+  onPlatform: (name: string) => void;
+}) {
+  const { name, price, note, shipped, completed, dateAdded, dateShipped, dateCompleted, platform } = product;
+
+  let statusLine = 'Eklendi: ' + formatDate(dateAdded);
+  if (shipped) statusLine = 'Kargolandı: ' + formatDate(dateShipped);
+  if (completed) statusLine = 'Tamamlandı: ' + formatDate(dateCompleted);
+
+  const cardClass = ['kargo-card', shipped ? 'shipped' : '', completed ? 'completed' : ''].filter(Boolean).join(' ');
+
+  const platforms = [
+    { name: 'Dolap', cls: 'dolap' },
+    { name: 'Gardrops', cls: 'gardrops' },
+    { name: 'Sahibinden', cls: 'sahibinden' },
+  ];
+
+  return (
+    <div className={cardClass}>
+      <button
+        onClick={onDelete}
+        style={{
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          width: 24,
+          height: 24,
+          borderRadius: '50%',
+          border: 'none',
+          background: 'transparent',
+          color: 'var(--ink-soft)',
+          fontSize: 14,
+          cursor: 'pointer',
+          lineHeight: 1,
+          padding: 0,
+        }}
+        aria-label="Sil"
+      >
+        ✕
+      </button>
+
+      <div style={{ flex: 1, minWidth: 0, paddingRight: 8 }}>
+        <p
+          style={{
+            fontWeight: 800,
+            fontSize: 15,
+            margin: '0 0 3px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {name}
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5, color: 'var(--ink-soft)' }}>
+          <span
+            style={{
+              color: 'var(--ink)',
+              background: 'var(--gold-bg)',
+              fontWeight: 800,
+              padding: '2px 8px',
+              borderRadius: 100,
+              border: '1.5px solid var(--ink)',
+            }}
+          >
+            {formatPrice(price)}
+          </span>
+          <span>{statusLine}</span>
+        </div>
+        {note && (
+          <p
+            style={{
+              fontSize: 12,
+              color: 'var(--ink-soft)',
+              marginTop: 3,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {note}
+          </p>
+        )}
+        <div style={{ display: 'flex', gap: 6, marginTop: 7, flexWrap: 'wrap' }}>
+          {platforms.map(p => (
+            <button
+              key={p.name}
+              className={`platform-pill ${p.cls}${platform === p.name ? ' active' : ''}`}
+              onClick={() => onPlatform(p.name)}
+            >
+              {p.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ flexShrink: 0, display: 'flex', gap: 7 }}>
+        {/* Kargola */}
+        <div
+          className={`stamp-btn${shipped ? ' shipped' : ''}`}
+          onClick={onToggleShip}
+          dangerouslySetInnerHTML={{ __html: shipped ? 'KARGO-<br>LANDI' : 'KARGOLA' }}
+        />
+        {/* Tamamlandı */}
+        <div
+          className={`stamp-btn complete-stamp${completed ? ' active' : ''}${shipped ? ' enabled' : ''}`}
+          onClick={onToggleComplete}
+          dangerouslySetInnerHTML={{ __html: 'TAMAM-<br>LANDI' }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ─── AuthScreen ─── */
+function AuthScreen() {
+  const [mode, setMode] = useState<AuthMode>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const submit = async () => {
+    setError('');
+    if (!email || !password) { setError('E-posta ve şifre girin.'); return; }
+    setLoading(true);
+    try {
+      if (mode === 'login') {
+        await signInWithEmailAndPassword(auth, email, password);
+      } else {
+        await createUserWithEmailAndPassword(auth, email, password);
+      }
+    } catch (e: any) {
+      setError(authErrMsg(e.code));
     }
-  }else if(shipToggle){
-    const id = shipToggle.getAttribute('data-toggle-ship');
-    const p = products.find(x=>x.id===id);
-    if(p){
-      p.shipped = !p.shipped;
-      p.dateShipped = p.shipped ? new Date().toISOString() : null;
-      if(!p.shipped){ p.completed = false; p.dateCompleted = null; }
-      render();
-      await saveProducts();
-      showToast(p.shipped ? 'Kargolandı olarak işaretlendi' : 'Bekliyor olarak işaretlendi');
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ maxWidth: 380, margin: '0 auto', padding: '60px 20px 40px', minHeight: '100vh' }}>
+      <h1 className="fredoka" style={{ fontSize: 26, margin: '0 0 6px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+        <BrickIcon /> Kargo Takip
+      </h1>
+      <p style={{ textAlign: 'center', color: 'var(--ink-soft)', fontSize: 13, margin: '0 0 28px' }}>
+        Verilerinize her cihazdan ulaşmak için giriş yapın.
+      </p>
+
+      <div className="auth-toggle-wrap">
+        <button className={`auth-toggle-btn${mode === 'login' ? ' active' : ''}`} onClick={() => { setMode('login'); setError(''); }}>
+          Giriş yap
+        </button>
+        <button className={`auth-toggle-btn${mode === 'signup' ? ' active' : ''}`} onClick={() => { setMode('signup'); setError(''); }}>
+          Üye ol
+        </button>
+      </div>
+
+      {error && (
+        <div style={{ background: 'var(--stamp-red-dim)', color: 'var(--stamp-red)', borderRadius: 10, padding: '10px 12px', fontSize: 12.5, marginBottom: 14 }}>
+          {error}
+        </div>
+      )}
+
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ display: 'block', fontSize: 12, color: 'var(--ink-soft)', marginBottom: 5, fontWeight: 600 }}>E-posta</label>
+        <input className="kargo-input" type="email" placeholder="ornek@mail.com" autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} />
+      </div>
+      <div style={{ marginBottom: 12 }}>
+        <label style={{ display: 'block', fontSize: 12, color: 'var(--ink-soft)', marginBottom: 5, fontWeight: 600 }}>Şifre</label>
+        <input className="kargo-input" type="password" placeholder="En az 6 karakter" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && submit()} />
+      </div>
+
+      <button className="auth-submit-btn" disabled={loading} onClick={submit}>
+        {mode === 'login' ? 'Giriş yap' : 'Hesap oluştur'}
+      </button>
+    </div>
+  );
+}
+
+/* ─── Main App ─── */
+export default function App() {
+  const [userState, setUserState] = useState<'loading' | 'auth' | 'app'>('loading');
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filter, setFilter] = useState<Filter>('all');
+  const [modalOpen, setModalOpen] = useState(false);
+  const [toast, setToast] = useState('');
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(''), 1700);
+  }, []);
+
+  /* auth listener */
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async user => {
+      if (user) {
+        setCurrentUser(user);
+        setUserState('app');
+        const docSnap = await getDoc(doc(db, 'users', user.uid));
+        setProducts(docSnap.exists() && docSnap.data().products ? docSnap.data().products : []);
+      } else {
+        setCurrentUser(null);
+        setUserState('auth');
+        setProducts([]);
+      }
+    });
+    return unsub;
+  }, []);
+
+  const saveProducts = useCallback(async (updated: Product[]) => {
+    if (!currentUser) return;
+    try {
+      await setDoc(doc(db, 'users', currentUser.uid), { products: updated }, { merge: true });
+    } catch {
+      showToast('Kaydedilemedi, internet bağlantınızı kontrol edin');
     }
-  }else if(completeToggle){
-    const id = completeToggle.getAttribute('data-toggle-complete');
-    const p = products.find(x=>x.id===id);
-    if(p){
-      if(!p.shipped){ showToast('Önce kargolandı olarak işaretle'); return; }
-      p.completed = !p.completed;
-      p.dateCompleted = p.completed ? new Date().toISOString() : null;
-      render();
-      await saveProducts();
-      showToast(p.completed ? 'Tamamlandı olarak işaretlendi' : 'Tamamlandı işareti kaldırıldı');
-    }
-  }else if(delId){
-    const id = delId.getAttribute('data-del');
-    products = products.filter(x=>x.id!==id);
-    render();
-    await saveProducts();
-  }
-});
+  }, [currentUser, showToast]);
 
-document.getElementById('clearBtn').addEventListener('click', async ()=>{
-  const count = products.filter(p=>p.completed).length;
-  if(count === 0) return;
-  products = products.filter(p=>!p.completed);
-  render();
-  await saveProducts();
-  showToast('Tamamlanan ürünler silindi');
-});
+  /* handlers */
+  const handleAddProduct = async (name: string, prices: number[], note: string) => {
+    const total = prices.reduce((s, n) => s + n, 0);
+    const np: Product = {
+      id: uid(),
+      name,
+      price: total,
+      prices: prices.length ? prices : [0],
+      note,
+      dateAdded: new Date().toISOString(),
+      shipped: false,
+      dateShipped: null,
+      completed: false,
+      dateCompleted: null,
+      platform: null,
+    };
+    const updated = [np, ...products];
+    setProducts(updated);
+    setModalOpen(false);
+    await saveProducts(updated);
+    showToast('Ürün eklendi');
+  };
 
-document.getElementById('tabs').addEventListener('click', (e)=>{
-  const tab = e.target.closest('.tab');
-  if(!tab) return;
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  tab.classList.add('active');
-  filter = tab.getAttribute('data-filter');
-  render();
-});
+  const handleToggleShip = async (id: string) => {
+    const updated = products.map(p => {
+      if (p.id !== id) return p;
+      const shipped = !p.shipped;
+      return {
+        ...p,
+        shipped,
+        dateShipped: shipped ? new Date().toISOString() : null,
+        completed: shipped ? p.completed : false,
+        dateCompleted: shipped ? p.dateCompleted : null,
+      };
+    });
+    setProducts(updated);
+    await saveProducts(updated);
+    const p = updated.find(x => x.id === id)!;
+    showToast(p.shipped ? 'Kargolandı olarak işaretlendi' : 'Bekliyor olarak işaretlendi');
+  };
 
-const modalBg = document.getElementById('modalBg');
-addBtn.addEventListener('click', ()=>{
-  document.getElementById('inpName').value='';
-  document.getElementById('inpPrice').value='';
-  document.getElementById('inpNote').value='';
-  modalBg.classList.add('open');
-  setTimeout(()=>document.getElementById('inpName').focus(), 100);
-});
-document.getElementById('cancelBtn').addEventListener('click', ()=>{
-  modalBg.classList.remove('open');
-});
-modalBg.addEventListener('click', (e)=>{
-  if(e.target === modalBg) modalBg.classList.remove('open');
-});
+  const handleToggleComplete = async (id: string) => {
+    const p = products.find(x => x.id === id)!;
+    if (!p.shipped) { showToast('Önce kargolandı olarak işaretle'); return; }
+    const updated = products.map(x => {
+      if (x.id !== id) return x;
+      const completed = !x.completed;
+      return { ...x, completed, dateCompleted: completed ? new Date().toISOString() : null };
+    });
+    setProducts(updated);
+    await saveProducts(updated);
+    const np = updated.find(x => x.id === id)!;
+    showToast(np.completed ? 'Tamamlandı olarak işaretlendi' : 'Tamamlandı işareti kaldırıldı');
+  };
 
-document.getElementById('saveBtn').addEventListener('click', async ()=>{
-  const name = document.getElementById('inpName').value.trim();
-  const price = document.getElementById('inpPrice').value;
-  const note = document.getElementById('inpNote').value.trim();
-  if(!name){
-    showToast('Ürün adı gerekli');
-    return;
-  }
-  products.push({
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
-    name, price: price || 0, note,
-    dateAdded: new Date().toISOString(),
-    shipped: false,
-    dateShipped: null,
-    completed: false,
-    dateCompleted: null,
-    platform: null
+  const handleDelete = async (id: string) => {
+    const updated = products.filter(p => p.id !== id);
+    setProducts(updated);
+    await saveProducts(updated);
+  };
+
+  const handlePlatform = async (id: string, name: string) => {
+    const updated = products.map(p => {
+      if (p.id !== id) return p;
+      return { ...p, platform: p.platform === name ? null : name };
+    });
+    setProducts(updated);
+    await saveProducts(updated);
+  };
+
+  const handleClearCompleted = async () => {
+    const updated = products.filter(p => !p.completed);
+    setProducts(updated);
+    await saveProducts(updated);
+    showToast('Tamamlanan ürünler silindi');
+  };
+
+  const handleLogout = () => signOut(auth);
+
+  /* derived */
+  const total = products.length;
+  const completedCount = products.filter(p => p.completed).length;
+  const pendingCount = products.filter(p => !p.shipped).length;
+  const totalValue = products.reduce((s, p) => s + (Number(p.price) || 0), 0);
+
+  let filtered = products;
+  if (filter === 'pending') filtered = products.filter(p => !p.shipped);
+  if (filter === 'shipped') filtered = products.filter(p => p.shipped && !p.completed);
+  if (filter === 'completed') filtered = products.filter(p => p.completed);
+
+  filtered = [...filtered].sort((a, b) => {
+    const rank = (p: Product) => p.completed ? 2 : p.shipped ? 1 : 0;
+    if (rank(a) !== rank(b)) return rank(a) - rank(b);
+    return new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime();
   });
-  modalBg.classList.remove('open');
-  render();
-  await saveProducts();
-  showToast('Ürün eklendi');
-});
-</script>
-</body>
-</html>
+
+  const tabs: { label: string; value: Filter }[] = [
+    { label: 'Tümü', value: 'all' },
+    { label: 'Bekliyor', value: 'pending' },
+    { label: 'Kargolandı', value: 'shipped' },
+    { label: 'Tamamlandı', value: 'completed' },
+  ];
+
+  /* ─── render ─── */
+  if (userState === 'loading') {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', color: 'var(--ink-soft)', fontSize: 14 }}>
+        Yükleniyor…
+      </div>
+    );
+  }
+
+  if (userState === 'auth') {
+    return <AuthScreen />;
+  }
+
+  return (
+    <>
+      <div style={{ maxWidth: 480, margin: '0 auto', padding: '20px 16px 100px' }}>
+        {/* header */}
+        <header style={{ padding: '8px 4px 18px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+          <div>
+            <h1 className="fredoka" style={{ fontSize: 27, margin: '0 0 2px', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <BrickIcon /> Kargo Takip
+            </h1>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--ink-soft)' }}>
+              Kargoya verince ve iş bitince damgala.
+            </p>
+          </div>
+          <button className="logout-btn" onClick={handleLogout}>Çıkış yap</button>
+        </header>
+
+        {/* summary */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, marginBottom: 18 }}>
+          {[
+            { num: total, lbl: 'toplam ürün' },
+            { num: pendingCount, lbl: 'bekliyor' },
+            { num: completedCount, lbl: 'tamamlandı' },
+            { num: formatPrice(totalValue), lbl: 'toplam tutar' },
+          ].map((s, i) => (
+            <div key={i} className="sum-card">
+              <span style={{ fontWeight: 800, fontSize: 19, display: 'block' }}>{s.num}</span>
+              <span style={{ fontSize: 11, color: 'var(--ink-soft)', marginTop: 2, display: 'block' }}>{s.lbl}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* tabs */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+          {tabs.map(t => (
+            <button
+              key={t.value}
+              className={`kargo-tab${filter === t.value ? ' active' : ''}`}
+              onClick={() => setFilter(t.value)}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* clear bar */}
+        {completedCount > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', margin: '-8px 0 12px' }}>
+            <button
+              onClick={handleClearCompleted}
+              style={{ border: 'none', background: 'transparent', color: 'var(--stamp-red)', fontSize: 12.5, fontWeight: 500, cursor: 'pointer', padding: '4px 2px' }}
+            >
+              Tamamlananları sil
+            </button>
+          </div>
+        )}
+
+        {/* list */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {filtered.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '50px 20px', color: 'var(--ink-soft)' }}>
+              <p style={{ margin: '0 0 4px', fontSize: 14 }}>Burada henüz ürün yok.</p>
+              <p style={{ margin: 0, fontSize: 14 }}>Aşağıdaki butondan ekleyebilirsin.</p>
+            </div>
+          ) : (
+            filtered.map(p => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                onToggleShip={() => handleToggleShip(p.id)}
+                onToggleComplete={() => handleToggleComplete(p.id)}
+                onDelete={() => handleDelete(p.id)}
+                onPlatform={name => handlePlatform(p.id, name)}
+              />
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* FAB */}
+      <button className="fab" onClick={() => setModalOpen(true)}>
+        + Ürün ekle
+      </button>
+
+      {/* Modal */}
+      <AddModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSave={handleAddProduct}
+      />
+
+      {/* Toast */}
+      {toast && <Toast msg={toast} />}
+    </>
+  );
+}
