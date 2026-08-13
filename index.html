@@ -325,6 +325,100 @@
     cursor:pointer;
     padding:4px 2px;
   }
+  .profit-btn{
+    width:100%;
+    padding:13px 0;
+    border-radius:12px;
+    border:2.5px solid var(--ink);
+    background:var(--stamp-green);
+    color:#fff;
+    font-family:'Fredoka',sans-serif;
+    font-size:14.5px;
+    font-weight:700;
+    cursor:pointer;
+    margin-bottom:16px;
+    box-shadow:0 4px 0 rgba(0,0,0,.2);
+  }
+  .profit-btn:active{ box-shadow:0 1px 0 rgba(0,0,0,.2); transform:translateY(3px); }
+  .sale-modal-sub{
+    margin:-8px 0 14px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink-soft);
+  }
+  .profit-modal{ max-height:85vh; overflow-y:auto; }
+  .month-nav{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:16px;
+    margin-bottom:16px;
+  }
+  .month-nav button{
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    border:2px solid var(--ink);
+    background:var(--paper-2);
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .month-nav span{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:16px;
+    min-width:140px;
+    text-align:center;
+  }
+  .profit-summary{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .profit-summary .p-card{
+    background:var(--card);
+    border:2px solid var(--ink);
+    border-radius:12px;
+    padding:12px 10px;
+    text-align:center;
+    box-shadow:0 3px 0 rgba(0,0,0,.12);
+  }
+  .profit-summary .p-card.wide{ grid-column:1 / -1; background:var(--stamp-green-dim); }
+  .profit-summary .p-card .num{
+    font-family:'Fredoka',sans-serif;
+    font-weight:700;
+    font-size:18px;
+    display:block;
+  }
+  .profit-summary .p-card.wide .num{ font-size:24px; color:var(--stamp-green); }
+  .profit-summary .p-card .lbl{
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:2px;
+    display:block;
+  }
+  .sale-row{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    background:var(--card);
+    border:2px solid var(--ink);
+    border-radius:10px;
+    padding:9px 11px;
+    box-shadow:0 2px 0 rgba(0,0,0,.1);
+  }
+  .sale-row .sale-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+  }
+  .sale-row .sale-name{ font-weight:700; font-size:13.5px; flex:1; overflow-wrap:anywhere; }
+  .sale-row .sale-profit{ font-family:'Fredoka',sans-serif; font-weight:700; font-size:13.5px; color:var(--stamp-green); white-space:nowrap; }
+  .sale-row .sale-profit.negative{ color:var(--stamp-red); }
+  .sale-row .sale-detail{ font-size:11.5px; color:var(--ink-soft); font-family:'Nunito',sans-serif; }
   .empty{ text-align:center; padding:50px 20px; color:var(--ink-soft); }
   .empty p{ margin:0 0 4px; font-size:14px; }
   .fab{
@@ -647,6 +741,8 @@
 
   <div class="summary" id="summary"></div>
 
+  <button class="profit-btn" id="profitBtn">💰 Bu ayki kârım</button>
+
   <div class="tabs" id="tabs">
     <div class="tab active" data-filter="all">Tümü</div>
     <div class="tab" data-filter="pending">Bekliyor</div>
@@ -688,6 +784,37 @@
   </div>
 </div>
 
+<div class="modal-bg" id="saleModalBg">
+  <div class="modal">
+    <h2>💰 Satış fiyatı</h2>
+    <p class="sale-modal-sub" id="saleModalProductName"></p>
+    <div class="field">
+      <label>Kaç TL'ye sattınız?</label>
+      <input type="number" id="inpSalePrice" inputmode="decimal" placeholder="Örn. 450">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="saleCancelBtn">Vazgeç</button>
+      <button class="btn-save" id="saleSaveBtn">Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="profitModalBg">
+  <div class="modal profit-modal">
+    <h2>💰 Kâr raporu</h2>
+    <div class="month-nav">
+      <button type="button" id="prevMonthBtn">‹</button>
+      <span id="monthLabel"></span>
+      <button type="button" id="nextMonthBtn">›</button>
+    </div>
+    <div class="profit-summary" id="profitSummary"></div>
+    <div id="profitList" class="notes-list"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="closeProfitBtn">Kapat</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-bg" id="notesModalBg">
   <div class="modal">
     <h2>Henüz satılmadı</h2>
@@ -702,6 +829,7 @@
     </div>
   </div>
 </div>
+
 
 <div class="toast" id="toast"></div>
 
@@ -754,6 +882,7 @@ function escapeHtml(str){
 }
 
 let notes = [];
+let sales = [];
 
 async function loadProducts(){
   try{
@@ -761,9 +890,11 @@ async function loadProducts(){
     const data = doc.exists ? doc.data() : {};
     products = data.products || [];
     notes = data.notes || [];
+    sales = data.sales || [];
   }catch(e){
     products = [];
     notes = [];
+    sales = [];
     showToast('Veriler yüklenemedi');
   }
   render();
@@ -771,7 +902,7 @@ async function loadProducts(){
 }
 async function saveProducts(){
   try{
-    await db.collection('users').doc(currentUser.uid).set({products, notes}, {merge:true});
+    await db.collection('users').doc(currentUser.uid).set({products, notes, sales}, {merge:true});
   }catch(e){
     showToast('Kaydedilemedi, internet bağlantınızı kontrol edin');
   }
@@ -889,7 +1020,7 @@ function render(){
   list.innerHTML = filtered.map(p => {
     let statusLine = 'Eklendi: ' + formatDate(p.dateAdded);
     if(p.shipped) statusLine = 'Kargolandı: ' + formatDate(p.dateShipped);
-    if(p.completed) statusLine = 'Tamamlandı: ' + formatDate(p.dateCompleted);
+    if(p.completed) statusLine = 'Satıldı: ' + formatPrice(p.salePrice);
     return `
     <div class="card ${p.shipped ? 'shipped' : ''} ${p.completed ? 'completed' : ''}" data-id="${p.id}">
       <button class="del-btn" data-del="${p.id}" aria-label="Sil">✕</button>
@@ -900,6 +1031,7 @@ function render(){
           <span>${statusLine}</span>
         </div>
         ${p.prices && p.prices.length > 1 ? `<p class="price-breakdown">${p.prices.map(n=>formatPrice(n)).join(' + ')}</p>` : ''}
+        ${p.completed ? `<p class="price-breakdown" style="color:${(p.salePrice - p.price) >= 0 ? 'var(--stamp-green)' : 'var(--stamp-red)'};">Kâr: ${(p.salePrice - p.price) >= 0 ? '+' : ''}${formatPrice(p.salePrice - p.price)}</p>` : ''}
         ${p.note ? `<p class="card-note">${escapeHtml(p.note)}</p>` : ''}
         <div class="platform-row">
           ${['Dolap','Gardrops','Sahibinden'].map(name => `
@@ -954,11 +1086,17 @@ document.getElementById('list').addEventListener('click', async (e)=>{
     const p = products.find(x=>x.id===id);
     if(p){
       if(!p.shipped){ showToast('Önce kargolandı olarak işaretle'); return; }
-      p.completed = !p.completed;
-      p.dateCompleted = p.completed ? new Date().toISOString() : null;
-      render();
-      await saveProducts();
-      showToast(p.completed ? 'Tamamlandı olarak işaretlendi' : 'Tamamlandı işareti kaldırıldı');
+      if(p.completed){
+        p.completed = false;
+        p.dateCompleted = null;
+        p.salePrice = null;
+        sales = sales.filter(s => s.id !== id);
+        render();
+        await saveProducts();
+        showToast('Tamamlandı işareti kaldırıldı');
+      }else{
+        openSaleModal(p);
+      }
     }
   }else if(delId){
     const id = delId.getAttribute('data-del');
@@ -975,6 +1113,120 @@ document.getElementById('clearBtn').addEventListener('click', async ()=>{
   render();
   await saveProducts();
   showToast('Tamamlanan ürünler silindi');
+});
+
+/* ---------- Satış fiyatı modalı ---------- */
+const saleModalBg = document.getElementById('saleModalBg');
+let pendingCompleteId = null;
+
+function openSaleModal(p){
+  pendingCompleteId = p.id;
+  document.getElementById('saleModalProductName').textContent = p.name + ' — maliyet: ' + formatPrice(p.price);
+  document.getElementById('inpSalePrice').value = '';
+  saleModalBg.classList.add('open');
+  setTimeout(()=>document.getElementById('inpSalePrice').focus(), 100);
+}
+document.getElementById('saleCancelBtn').addEventListener('click', ()=>{
+  saleModalBg.classList.remove('open');
+  pendingCompleteId = null;
+});
+saleModalBg.addEventListener('click', (e)=>{
+  if(e.target === saleModalBg){
+    saleModalBg.classList.remove('open');
+    pendingCompleteId = null;
+  }
+});
+document.getElementById('saleSaveBtn').addEventListener('click', async ()=>{
+  const val = Number(document.getElementById('inpSalePrice').value);
+  if(!val || val <= 0){
+    showToast('Geçerli bir satış fiyatı girin');
+    return;
+  }
+  const p = products.find(x=>x.id===pendingCompleteId);
+  if(!p) return;
+  p.completed = true;
+  p.dateCompleted = new Date().toISOString();
+  p.salePrice = val;
+  const cost = Number(p.price) || 0;
+  sales = sales.filter(s => s.id !== p.id);
+  sales.push({
+    id: p.id,
+    name: p.name,
+    cost,
+    salePrice: val,
+    profit: val - cost,
+    platform: p.platform || null,
+    dateSold: p.dateCompleted
+  });
+  saleModalBg.classList.remove('open');
+  pendingCompleteId = null;
+  render();
+  await saveProducts();
+  showToast('Satış kaydedildi 🎉');
+});
+
+/* ---------- Kâr raporu ---------- */
+const profitModalBg = document.getElementById('profitModalBg');
+const monthLabel = document.getElementById('monthLabel');
+const profitSummaryEl = document.getElementById('profitSummary');
+const profitListEl = document.getElementById('profitList');
+const monthNames = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+let reportDate = new Date();
+
+function renderProfitReport(){
+  const y = reportDate.getFullYear();
+  const m = reportDate.getMonth();
+  monthLabel.textContent = monthNames[m] + ' ' + y;
+
+  const monthSales = sales.filter(s=>{
+    const d = new Date(s.dateSold);
+    return d.getFullYear() === y && d.getMonth() === m;
+  }).sort((a,b)=> new Date(b.dateSold) - new Date(a.dateSold));
+
+  const totalRevenue = monthSales.reduce((s,x)=>s+x.salePrice, 0);
+  const totalCost = monthSales.reduce((s,x)=>s+x.cost, 0);
+  const totalProfit = totalRevenue - totalCost;
+
+  profitSummaryEl.innerHTML = `
+    <div class="p-card"><span class="num">${monthSales.length}</span><span class="lbl">satış adedi</span></div>
+    <div class="p-card"><span class="num">${formatPrice(totalRevenue)}</span><span class="lbl">toplam satış</span></div>
+    <div class="p-card"><span class="num">${formatPrice(totalCost)}</span><span class="lbl">toplam maliyet</span></div>
+    <div class="p-card wide"><span class="num">${formatPrice(totalProfit)}</span><span class="lbl">bu ayki net kâr</span></div>
+  `;
+
+  if(monthSales.length === 0){
+    profitListEl.innerHTML = `<p class="notes-empty">Bu ayda henüz satış kaydı yok.</p>`;
+  }else{
+    profitListEl.innerHTML = monthSales.map(s => `
+      <div class="sale-row">
+        <div class="sale-top">
+          <span class="sale-name">${escapeHtml(s.name)}</span>
+          <span class="sale-profit ${s.profit < 0 ? 'negative' : ''}">${s.profit >= 0 ? '+' : ''}${formatPrice(s.profit)}</span>
+        </div>
+        <span class="sale-detail">${formatDate(s.dateSold)} · Maliyet ${formatPrice(s.cost)} → Satış ${formatPrice(s.salePrice)}${s.platform ? ' · ' + s.platform : ''}</span>
+      </div>
+    `).join('');
+  }
+}
+
+document.getElementById('profitBtn').addEventListener('click', ()=>{
+  reportDate = new Date();
+  renderProfitReport();
+  profitModalBg.classList.add('open');
+});
+document.getElementById('closeProfitBtn').addEventListener('click', ()=>{
+  profitModalBg.classList.remove('open');
+});
+profitModalBg.addEventListener('click', (e)=>{
+  if(e.target === profitModalBg) profitModalBg.classList.remove('open');
+});
+document.getElementById('prevMonthBtn').addEventListener('click', ()=>{
+  reportDate = new Date(reportDate.getFullYear(), reportDate.getMonth()-1, 1);
+  renderProfitReport();
+});
+document.getElementById('nextMonthBtn').addEventListener('click', ()=>{
+  reportDate = new Date(reportDate.getFullYear(), reportDate.getMonth()+1, 1);
+  renderProfitReport();
 });
 
 document.getElementById('tabs').addEventListener('click', (e)=>{
