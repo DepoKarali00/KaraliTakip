@@ -28,6 +28,7 @@
     --stamp-green-dim:#D7EFDD;
     --stamp-blue:#0057BF;
     --stamp-blue-dim:#D9E6F7;
+    --stamp-purple:#7B2FBF;
     --gold:#D8A400;
     --gold-bg:#FFE000;
     --radius:14px;
@@ -254,7 +255,7 @@
   }
   .platform-pill[data-platform-name="Dolap"].active{ background:var(--gold-bg); color:var(--ink); }
   .platform-pill[data-platform-name="Gardrops"].active{ background:var(--stamp-blue); color:#fff; }
-  .platform-pill[data-platform-name="Sahibinden"].active{ background:var(--stamp-red); color:#fff; }
+  .platform-pill[data-platform-name="Shopier"].active{ background:var(--stamp-purple); color:#fff; }
   .stamps-col{ flex-shrink:0; display:flex; gap:7px; }
   .stamp-btn{
     flex-shrink:0;
@@ -1034,7 +1035,7 @@ function render(){
         ${p.completed ? `<p class="price-breakdown" style="color:${(p.salePrice - p.price) >= 0 ? 'var(--stamp-green)' : 'var(--stamp-red)'};">Kâr: ${(p.salePrice - p.price) >= 0 ? '+' : ''}${formatPrice(p.salePrice - p.price)}</p>` : ''}
         ${p.note ? `<p class="card-note">${escapeHtml(p.note)}</p>` : ''}
         <div class="platform-row">
-          ${['Dolap','Gardrops','Sahibinden'].map(name => `
+          ${['Dolap','Gardrops','Shopier'].map(name => `
             <div class="platform-pill ${p.platform === name ? 'active' : ''}" data-platform-id="${p.id}" data-platform-name="${name}">${name}</div>
           `).join('')}
         </div>
