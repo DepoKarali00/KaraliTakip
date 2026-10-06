@@ -30,10 +30,8 @@
     --stamp-blue-dim:#D9E6F7;
     --stamp-purple:#7B2FBF;
     --stamp-purple-dim:#EDE0F7;
-    --stamp-orange:#E07000;
-    --stamp-orange-dim:#FFF0D9;
-    --stamp-pink:#C0006A;
-    --stamp-pink-dim:#FFE0F0;
+    --stamp-teal:#007A6E;
+    --stamp-teal-dim:#D0F0ED;
     --gold:#D8A400;
     --gold-bg:#FFE000;
     --gold-dim:#FFF8CC;
@@ -84,8 +82,7 @@
   .pf-pill[data-pf="Dolap"].active{background:var(--gold);border-color:var(--ink);}
   .pf-pill[data-pf="Gardrops"].active{background:var(--stamp-blue);border-color:var(--ink);}
   .pf-pill[data-pf="Shopier"].active{background:var(--stamp-purple);border-color:var(--ink);}
-  .pf-pill[data-pf="Trendyol"].active{background:var(--stamp-orange);border-color:var(--ink);}
-  .pf-pill[data-pf="Instagram"].active{background:var(--stamp-pink);border-color:var(--ink);}
+  .pf-pill[data-pf="Depo Shopping"].active{background:var(--stamp-teal);border-color:var(--ink);}
 
   /* Sort row */
   .sort-row{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
@@ -130,8 +127,7 @@
   .platform-badge[data-platform="Dolap"]{background:var(--gold-dim);color:var(--gold);}
   .platform-badge[data-platform="Gardrops"]{background:var(--stamp-blue-dim);color:var(--stamp-blue);}
   .platform-badge[data-platform="Shopier"]{background:var(--stamp-purple-dim);color:var(--stamp-purple);}
-  .platform-badge[data-platform="Trendyol"]{background:var(--stamp-orange-dim);color:var(--stamp-orange);}
-  .platform-badge[data-platform="Instagram"]{background:var(--stamp-pink-dim);color:var(--stamp-pink);}
+  .platform-badge[data-platform="Depo Shopping"]{background:var(--stamp-teal-dim);color:var(--stamp-teal);}
 
   .card-prices{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;}
   .price-tag{
@@ -226,8 +222,7 @@
   .plat-opt[data-plat="Dolap"].active{background:var(--gold-dim);color:var(--gold);}
   .plat-opt[data-plat="Gardrops"].active{background:var(--stamp-blue-dim);color:var(--stamp-blue);}
   .plat-opt[data-plat="Shopier"].active{background:var(--stamp-purple-dim);color:var(--stamp-purple);}
-  .plat-opt[data-plat="Trendyol"].active{background:var(--stamp-orange-dim);color:var(--stamp-orange);}
-  .plat-opt[data-plat="Instagram"].active{background:var(--stamp-pink-dim);color:var(--stamp-pink);}
+  .plat-opt[data-plat="Depo Shopping"].active{background:var(--stamp-teal-dim);color:var(--stamp-teal);}
 
   /* Two-col price row */
   .two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
@@ -393,8 +388,7 @@
       <div class="pf-pill" data-pf="Dolap">Dolap</div>
       <div class="pf-pill" data-pf="Gardrops">Gardrops</div>
       <div class="pf-pill" data-pf="Shopier">Shopier</div>
-      <div class="pf-pill" data-pf="Trendyol">Trendyol</div>
-      <div class="pf-pill" data-pf="Instagram">Instagram</div>
+      <div class="pf-pill" data-pf="Depo Shopping">Depo Shopping</div>
     </div>
     <div class="sort-row">
       <label>Sırala:</label>
@@ -440,8 +434,7 @@
         <div class="plat-opt" data-plat="Dolap">🟡 Dolap</div>
         <div class="plat-opt" data-plat="Gardrops">🔵 Gardrops</div>
         <div class="plat-opt" data-plat="Shopier">🟣 Shopier</div>
-        <div class="plat-opt" data-plat="Trendyol">🟠 Trendyol</div>
-        <div class="plat-opt" data-plat="Instagram">🩷 Instagram</div>
+        <div class="plat-opt" data-plat="Depo Shopping">🟢 Depo Shopping</div>
       </div>
     </div>
 
@@ -589,7 +582,7 @@ let sortMode  = 'date-desc';
 let currentUser = null;
 let authMode  = 'login';
 
-const PLATFORMS = ['Dolap','Gardrops','Shopier','Trendyol','Instagram'];
+const PLATFORMS = ['Dolap','Gardrops','Shopier','Depo Shopping'];
 const MAX_ROWS  = 8;
 
 /* ============================================================
